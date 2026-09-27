@@ -886,7 +886,7 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
         monitoringService?.startMonitoring()
         monitoringService?.startRecording("standing", 50)
         updateUiMonitoringState(true)
-        showToast("FallGuard AI protection active.")
+        showToast("FallGaurd AI protection active.")
     }
 
     private fun handleStopMonitoring() {
