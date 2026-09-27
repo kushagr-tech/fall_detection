@@ -1,0 +1,54 @@
+# ── Android Build & Caches ───────────────────────────────────
+.gradle/
+*/.gradle/
+build/
+*/build/
+*/*/build/
+local.properties
+*/local.properties
+.cxx/
+*.apk
+*.ap_
+*.aab
+*.dex
+
+# ── Python Virtual Environments & Caches ─────────────────────
+.venv/
+*/.venv/
+venv/
+*/venv/
+ENV/
+env/
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── Datasets & Large Raw Archives ────────────────────────────
+har_pipeline/data/raw/
+har_pipeline/data/processed/
+har_pipeline/data/cache/
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.parquet
+
+# ── System & IDE Artifacts ───────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.idea/
+*/.idea/
+*.iml
+.vscode/

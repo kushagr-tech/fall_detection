@@ -1,0 +1,98 @@
+[
+  {
+    "model_name": "Random Forest",
+    "accuracy": 0.998567335243553,
+    "macro_f1": 0.9968567390249562,
+    "weighted_f1": 0.9985600817038709,
+    "fall_precision": 1.0,
+    "fall_recall": 0.9714285714285714,
+    "fall_f1": 0.9855072463768116,
+    "per_class": {
+      "falling": {
+        "precision": 1.0,
+        "recall": 0.9714285714285714,
+        "f1": 0.9855072463768116,
+        "support": 35
+      },
+      "lying": {
+        "precision": 0.991304347826087,
+        "recall": 1.0,
+        "f1": 0.9956331877729258,
+        "support": 114
+      },
+      "running": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 212
+      },
+      "sitting": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 184
+      },
+      "standing": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 48
+      },
+      "walking": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 105
+      }
+    },
+    "confusion_matrix_path": "/Users/kushagragarwal/Documents/projs/bob_hackathon/har_pipeline/outputs/plots/confusion_matrix_random_forest.png"
+  },
+  {
+    "model_name": "Neural Network",
+    "accuracy": 0.9856733524355301,
+    "macro_f1": 0.9666748622123876,
+    "weighted_f1": 0.9845978191511939,
+    "fall_precision": 1.0,
+    "fall_recall": 0.7142857142857143,
+    "fall_f1": 0.8333333333333334,
+    "per_class": {
+      "falling": {
+        "precision": 1.0,
+        "recall": 0.7142857142857143,
+        "f1": 0.8333333333333334,
+        "support": 35
+      },
+      "lying": {
+        "precision": 0.9661016949152542,
+        "recall": 1.0,
+        "f1": 0.9827586206896551,
+        "support": 114
+      },
+      "running": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 212
+      },
+      "sitting": {
+        "precision": 0.968421052631579,
+        "recall": 1.0,
+        "f1": 0.983957219251337,
+        "support": 184
+      },
+      "standing": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 48
+      },
+      "walking": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 105
+      }
+    },
+    "confusion_matrix_path": "/Users/kushagragarwal/Documents/projs/bob_hackathon/har_pipeline/outputs/plots/confusion_matrix_neural_network.png"
+  }
+]

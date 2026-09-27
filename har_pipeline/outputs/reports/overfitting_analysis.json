@@ -1,0 +1,18 @@
+[
+  {
+    "model": "Random Forest",
+    "train_accuracy": 1.0,
+    "test_accuracy": 0.998567335243553,
+    "generalization_gap": 0.0014326647564469885,
+    "target_80_percent": "PASSED (>= 80%)",
+    "overfitting_verdict": "NO OVERFITTING (Gap < 5%)"
+  },
+  {
+    "model": "Neural Network",
+    "train_accuracy": 1.0,
+    "test_accuracy": 0.9856733524355301,
+    "generalization_gap": 0.014326647564469885,
+    "target_80_percent": "PASSED (>= 80%)",
+    "overfitting_verdict": "NO OVERFITTING (Gap < 5%)"
+  }
+]

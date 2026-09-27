@@ -1,0 +1,193 @@
+{
+  "audit_1_split": {
+    "train_subjects": [
+      "subject03",
+      "subject04",
+      "subject05",
+      "subject07",
+      "subject08",
+      "subject09",
+      "subject11",
+      "subject12",
+      "subject13",
+      "subject14"
+    ],
+    "val_subjects": [
+      "subject10",
+      "subject16"
+    ],
+    "test_subjects": [
+      "subject01",
+      "subject02",
+      "subject06",
+      "subject15"
+    ],
+    "inter_tr_va_empty": true,
+    "inter_tr_te_empty": true,
+    "inter_va_te_empty": true,
+    "recording_overlap_empty": true
+  },
+  "audit_2_windowing": {
+    "pre_split_train_windows": 2101,
+    "pre_split_test_windows": 698,
+    "post_split_train_windows": 2101,
+    "post_split_test_windows": 698,
+    "overlapping_windows_across_splits": 0,
+    "recordings_crossing_splits": 0
+  },
+  "audit_3_duplicates": {
+    "exact_duplicates": 0,
+    "near_duplicate_count": 97,
+    "pct_near_duplicates": 48.5,
+    "mean_min_cosine_distance": 0.07909598034086844
+  },
+  "audit_4_baselines": {
+    "Majority Class": {
+      "accuracy": 0.16332378223495703,
+      "macro_f1": 0.046798029556650245,
+      "fall_recall": 0.0
+    },
+    "Logistic Regression": {
+      "accuracy": 0.9828080229226361,
+      "macro_f1": 0.9580884268656087,
+      "fall_recall": 0.6571428571428571
+    },
+    "Decision Tree (depth=3)": {
+      "accuracy": 0.6461318051575932,
+      "macro_f1": 0.5757436037018527,
+      "fall_recall": 0.0
+    },
+    "Decision Tree (depth=6)": {
+      "accuracy": 0.994269340974212,
+      "macro_f1": 0.9915563495349552,
+      "fall_recall": 0.9428571428571428
+    },
+    "Full Random Forest": {
+      "accuracy": 0.998567335243553,
+      "macro_f1": 0.9968567390249562,
+      "fall_recall": 0.9714285714285714
+    }
+  },
+  "audit_5_loso_mean": {
+    "accuracy": 0.9982163149350649,
+    "precision": 0.8321370214752568,
+    "recall": 0.8298611111111112,
+    "f1": 0.9968630262416486,
+    "fall_recall": 0.9791666666666667,
+    "fall_precision": 1.0,
+    "fpr": 0.0
+  },
+  "audit_5_loso_std": {
+    "accuracy": 0.005795558752867695,
+    "precision": 0.08615909501387636,
+    "recall": 0.08689026479067899,
+    "f1": 0.01085468764231102,
+    "fall_recall": 0.07162670931662535,
+    "fall_precision": 0.0,
+    "fpr": 0.0
+  },
+  "audit_7_12_stress_test": {
+    "Clean Baseline": {
+      "accuracy": 0.998567335243553,
+      "fall_recall": 0.9714285714285714
+    },
+    "Orientation 25\u00b0 Tilt": {
+      "accuracy": 0.8853868194842407,
+      "fall_recall": 1.0
+    },
+    "Gait Speed Shift (\u00b130%)": {
+      "accuracy": 0.9011461318051576,
+      "fall_recall": 0.9714285714285714
+    },
+    "Atypical / Slump Falls (-45% impact)": {
+      "accuracy": 1.0,
+      "fall_recall": 1.0
+    }
+  },
+  "audit_8_9_metrics": {
+    "confusion_matrix": [
+      [
+        34,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        114,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        212,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        184,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        48,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        105
+      ]
+    ],
+    "total_falls": 35,
+    "fall_tp": 34,
+    "fall_fn_missed": 1,
+    "fall_fp_alarms": 0,
+    "fall_tn": 663,
+    "fall_recall": 0.9714285714285714,
+    "fall_precision": 1.0,
+    "fall_f1": 0.9855072463768115,
+    "specificity": 1.0,
+    "fpr": 0.0,
+    "fnr": 0.02857142857142857,
+    "balanced_accuracy": 0.9952380952380953,
+    "macro_f1": 0.9968567390249562,
+    "weighted_f1": 0.9985600817038709
+  },
+  "audit_10_label_shuffle": {
+    "chance_level": 0.16666666666666666,
+    "shuffled_accuracy": 0.21060171919770773,
+    "shuffled_macro_f1": 0.16739955251193261,
+    "passed_sanity_check": true
+  },
+  "audit_11_metadata_leakage": {
+    "total_features": 134,
+    "suspicious_features": [],
+    "raw_column_correlations": {
+      "timestamp": -0.04731396140543069,
+      "ax": -0.49149318578077833,
+      "ay": 0.04396538964790537,
+      "az": 0.6215970723551714,
+      "gx": -0.01614564888893334,
+      "gy": -0.02083027113250155,
+      "gz": -0.019407860119351434
+    },
+    "is_clean": true
+  }
+}

@@ -1,0 +1,40 @@
+<resources>
+    <color name="background">#F5F7FA</color>
+    <color name="text_primary">#1A1D23</color>
+    <color name="text_secondary">#6B7280</color>
+
+    <color name="recording_active">#EF4444</color>
+    <color name="recording_idle">#D1D5DB</color>
+
+    <color name="btn_start">#22C55E</color>
+    <color name="btn_stop">#EF4444</color>
+    <color name="btn_export">#3B82F6</color>
+
+    <color name="card_bg">#FFFFFF</color>
+    <color name="card_border">#E5E7EB</color>
+
+    <!-- ── Per-activity label colours ──────────────────────────────────── -->
+    <color name="label_falling">#EF4444</color>   <!-- red — danger -->
+    <color name="label_running">#F97316</color>   <!-- orange -->
+    <color name="label_walking">#3B82F6</color>   <!-- blue -->
+    <color name="label_standing">#22C55E</color>  <!-- green -->
+    <color name="label_sitting">#8B5CF6</color>   <!-- purple -->
+    <color name="label_lying">#6B7280</color>     <!-- grey -->
+
+    <!-- ── Fall detector phase colours ─────────────────────────────────── -->
+    <color name="phase_yellow">#EAB308</color>
+    <color name="phase_orange">#F97316</color>
+    <color name="phase_red">#EF4444</color>
+
+    <!-- ── Fall alert ────────────────────────────────────────────────────── -->
+    <color name="fall_alert_bg">#DC2626</color>
+
+    <!-- Required by Material theme -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>

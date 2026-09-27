@@ -1,0 +1,7 @@
+unified_label,dataset_id,phone_position,n_rows,n_subjects,n_recordings
+falling,synthetic,unknown,9300,16,16
+lying,synthetic,unknown,27650,14,14
+running,synthetic,unknown,28350,13,13
+sitting,synthetic,unknown,30600,14,14
+standing,synthetic,unknown,23700,12,12
+walking,synthetic,unknown,24400,11,11

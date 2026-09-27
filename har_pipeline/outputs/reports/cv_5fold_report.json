@@ -1,0 +1,79 @@
+{
+  "summary": {
+    "Random Forest": {
+      "train_acc_mean": 1.0,
+      "train_acc_std": 0.0,
+      "val_acc_mean": 0.9988593155893536,
+      "val_acc_std": 0.0022813688212927727,
+      "gap_mean": 0.0011406844106463866,
+      "gap_std": 0.002281368821292773,
+      "macro_f1_mean": 0.9981879738686757,
+      "macro_f1_std": 0.003624052262648414,
+      "fall_recall_mean": 0.9828571428571429,
+      "fall_recall_std": 0.0342857142857143,
+      "fall_f1_mean": 0.991044776119403,
+      "fall_f1_std": 0.01791044776119404
+    },
+    "Neural Network": {
+      "train_acc_mean": 1.0,
+      "train_acc_std": 0.0,
+      "val_acc_mean": 0.9928559465055484,
+      "val_acc_std": 0.004567170161847709,
+      "gap_mean": 0.007144053494451685,
+      "gap_std": 0.0045671701618477095,
+      "macro_f1_mean": 0.9887979465218418,
+      "macro_f1_std": 0.007178513294251849,
+      "fall_recall_mean": 0.9020687226629105,
+      "fall_recall_std": 0.06074641191355011,
+      "fall_f1_mean": 0.9474332865294827,
+      "fall_f1_std": 0.033829001327941546
+    }
+  },
+  "folds": [
+    {
+      "fold": 1,
+      "rf_train_acc": 1.0,
+      "rf_val_acc": 0.9942965779467681,
+      "rf_gap": 0.005703422053231932,
+      "nn_train_acc": 1.0,
+      "nn_val_acc": 0.9923954372623575,
+      "nn_gap": 0.0076045627376425395
+    },
+    {
+      "fold": 2,
+      "rf_train_acc": 1.0,
+      "rf_val_acc": 1.0,
+      "rf_gap": 0.0,
+      "nn_train_acc": 1.0,
+      "nn_val_acc": 0.9928366762177651,
+      "nn_gap": 0.007163323782234943
+    },
+    {
+      "fold": 3,
+      "rf_train_acc": 1.0,
+      "rf_val_acc": 1.0,
+      "rf_gap": 0.0,
+      "nn_train_acc": 1.0,
+      "nn_val_acc": 0.9961904761904762,
+      "nn_gap": 0.003809523809523818
+    },
+    {
+      "fold": 4,
+      "rf_train_acc": 1.0,
+      "rf_val_acc": 1.0,
+      "rf_gap": 0.0,
+      "nn_train_acc": 1.0,
+      "nn_val_acc": 0.9847619047619047,
+      "nn_gap": 0.015238095238095273
+    },
+    {
+      "fold": 5,
+      "rf_train_acc": 1.0,
+      "rf_val_acc": 1.0,
+      "rf_gap": 0.0,
+      "nn_train_acc": 1.0,
+      "nn_val_acc": 0.9980952380952381,
+      "nn_gap": 0.0019047619047618536
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+numpy>=1.24,<2.0
+pandas>=2.0
+scikit-learn>=1.4
+scipy>=1.11          # required for UniMiB .mat loading + signal processing
+matplotlib>=3.8
+seaborn>=0.13
+torch>=2.1           # CPU-only is fine; add --index-url for cu118 if GPU wanted
+torchinfo>=1.8       # model summary
+joblib>=1.3          # model persistence
+tqdm>=4.66
+pyarrow>=14.0        # parquet cache for harmonized dataset

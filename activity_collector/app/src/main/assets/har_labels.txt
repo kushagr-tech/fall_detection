@@ -1,0 +1,6 @@
+falling
+lying
+running
+sitting
+standing
+walking

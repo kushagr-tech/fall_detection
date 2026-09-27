@@ -1,0 +1,50 @@
+<resources>
+    <string name="app_name">Activity Collector</string>
+    <string name="subtitle">Motion sensor data recorder + fall detection</string>
+
+    <!-- ── Inference display ─────────────────────────────────────────────── -->
+    <string name="inference_title">LIVE DETECTION</string>
+    <string name="activity_prefix">Activity:</string>
+    <string name="activity_idle">—</string>
+    <string name="confidence_prefix">Confidence:</string>
+    <string name="confidence_format">%d%%</string>
+
+    <!-- ── Fall alert ────────────────────────────────────────────────────── -->
+    <string name="fall_banner_text">⚠️ Possible fall detected</string>
+    <string name="fall_alert_title">Possible fall detected</string>
+    <string name="fall_alert_body">Are you okay? Tap a button or the alert will escalate.</string>
+    <string name="fall_alert_countdown">Alert in %d s…</string>
+    <string name="fall_btn_cancel">Cancel alert</string>
+    <string name="fall_btn_okay">I am okay ✓</string>
+
+    <!-- ── Recording labels ──────────────────────────────────────────────── -->
+    <string name="label_activity">Activity Label (for CSV recording)</string>
+    <string name="label_sampling_rate">Sampling Rate</string>
+    <string name="hz_label">Hz  (recommended: 50 Hz)</string>
+    <string name="stats_title">SESSION STATS</string>
+    <string name="duration_label">Duration</string>
+    <string name="samples_label">Samples</string>
+
+    <!-- ── Defaults ───────────────────────────────────────────────────────── -->
+    <string name="duration_default">00:00</string>
+    <string name="samples_default">0</string>
+
+    <!-- ── Format strings ────────────────────────────────────────────────── -->
+    <string name="duration_format">%1$02d:%2$02d</string>
+    <string name="sample_count_format">%d</string>
+
+    <!-- ── Buttons ───────────────────────────────────────────────────────── -->
+    <string name="btn_start">▶  Start</string>
+    <string name="btn_stop">■  Stop</string>
+    <string name="btn_export">⬇  Export CSV</string>
+
+    <!-- ── Foreground Service & Notifications ────────────────────────────── -->
+    <string name="notification_channel_monitoring">Fall Detection Monitoring</string>
+    <string name="notification_channel_monitoring_desc">Ongoing fall monitoring and activity recognition</string>
+    <string name="notification_channel_alert">Fall Emergency Alerts</string>
+    <string name="notification_channel_alert_desc">High-priority alerts when a fall is detected</string>
+    <string name="service_title">Fall Protection Active</string>
+    <string name="service_monitoring_format">Status: %1$s (%2$d%%) • %3$s</string>
+    <string name="action_stop">Stop Monitoring</string>
+    <string name="fall_alert_timeout_msg">Emergency Alert: Fall confirmed. Simulated emergency notification triggered.</string>
+</resources>

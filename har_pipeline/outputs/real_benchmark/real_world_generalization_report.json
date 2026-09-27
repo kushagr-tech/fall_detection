@@ -1,0 +1,320 @@
+{
+  "synthetic_debug_benchmark": {
+    "accuracy": 0.9986,
+    "macro_f1": 0.9969,
+    "fall_recall": 0.9714,
+    "note": "Controlled synthetic simulation with low entropy (used for development only)."
+  },
+  "real_world_benchmarks": {
+    "experiment_a_unseen_humans": {
+      "experiment": "Experiment A (Unseen Human Subjects on SisFall)",
+      "accuracy": 0.871952608794714,
+      "balanced_accuracy": 0.9343899726472091,
+      "macro_f1": 0.9312294175706326,
+      "weighted_f1": 0.8726248427119951,
+      "fall_recall": 1.0,
+      "fall_precision": 1.0,
+      "fall_f1": 1.0,
+      "fpr": 0.0,
+      "fnr": 0.0,
+      "confusion_matrix": [
+        [
+          72,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          191,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1579,
+          0,
+          0,
+          172
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          390,
+          0,
+          0,
+          1985
+        ]
+      ]
+    },
+    "experiment_c_young_to_elderly": {
+      "experiment": "Experiment C (Train on Young Adults -> Test on Elderly Adults 60-75)",
+      "accuracy": 0.8747284576393918,
+      "balanced_accuracy": 0.8906386389760874,
+      "macro_f1": 0.9041125262862157,
+      "weighted_f1": 0.8765222081262773,
+      "fall_recall": 0.8797127468581688,
+      "fall_precision": 1.0,
+      "fall_f1": 0.9360076408787011,
+      "fpr": 0.0,
+      "fnr": 0.12028725314183124,
+      "confusion_matrix": [
+        [
+          490,
+          0,
+          66,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1266,
+          119,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          4946,
+          0,
+          0,
+          90
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1453,
+          0,
+          0,
+          5378
+        ]
+      ]
+    },
+    "experiment_d_benchmark_to_android": {
+      "experiment": "Experiment D (Trained on SisFall Benchmark -> Tested on Android App Recordings)",
+      "accuracy": 0.17623762376237623,
+      "balanced_accuracy": 0.2,
+      "macro_f1": 0.06267605633802817,
+      "weighted_f1": 0.05522939617905453,
+      "fall_recall": 0.0,
+      "fall_precision": 0.0,
+      "fall_f1": 0.0,
+      "fpr": 0.0,
+      "fnr": 0.0,
+      "confusion_matrix": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          89,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          74,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          89,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          89,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          138,
+          26,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    "domain_shift_orientation_tilt": {
+      "experiment": "Domain Shift: 25\u00b0 Orientation Tilt on Real Data",
+      "accuracy": 0.8630667578035999,
+      "balanced_accuracy": 0.9315976434518621,
+      "macro_f1": 0.9251145490443546,
+      "weighted_f1": 0.8638446207830377,
+      "fall_recall": 1.0,
+      "fall_precision": 0.9863013698630136,
+      "fall_f1": 0.993103448275862,
+      "fpr": 0.0002316423442205235,
+      "fnr": 0.0,
+      "confusion_matrix": [
+        [
+          72,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          191,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1614,
+          0,
+          0,
+          136
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          464,
+          0,
+          0,
+          1911
+        ]
+      ]
+    },
+    "domain_shift_speed_shift": {
+      "experiment": "Domain Shift: \u00b130% Movement Cadence Shift on Real Data",
+      "accuracy": 0.3239917976760082,
+      "balanced_accuracy": 0.6614630436742914,
+      "macro_f1": 0.41415523955750566,
+      "weighted_f1": 0.2746207120910032,
+      "fall_recall": 1.0,
+      "fall_precision": 0.05930807248764415,
+      "fall_f1": 0.11197511664074648,
+      "fpr": 0.26453555709983784,
+      "fnr": 0.0,
+      "confusion_matrix": [
+        [
+          72,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          191,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          641,
+          0,
+          1052,
+          0,
+          0,
+          58
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          501,
+          0,
+          1767,
+          0,
+          0,
+          107
+        ]
+      ]
+    }
+  }
+}

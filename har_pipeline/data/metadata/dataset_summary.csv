@@ -1,0 +1,2 @@
+dataset_id,n_rows,n_subjects,n_recordings,n_unique_labels,est_duration_min,has_gyro_pct
+synthetic,144000,16,16,6,48.0,100.0
