@@ -63,7 +63,7 @@ object EmergencyDispatcher {
         }
 
         val timeStr = SimpleDateFormat("HH:mm:ss dd-MMM", Locale.getDefault()).format(Date())
-        val smsBody = "EMERGENCY SOS: Fall detected by Activity Collector! User did not respond to check-in. Time: $timeStr. Location: $locationStr. Please call or assist immediately!"
+        val smsBody = "EMERGENCY SOS: Fall detected by FallGuard! User did not respond to check-in. Time: $timeStr. Location: $locationStr. Please call or assist immediately!"
 
         // 2. Send SMS to ALL contacts in list
         var smsSuccessCount = 0
