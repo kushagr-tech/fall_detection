@@ -65,6 +65,10 @@ class InferenceEngine(
     }
     private val running = AtomicBoolean(false)
 
+    private var currentIntervalMs = inferenceIntervalMs
+    private var consecutiveStationaryCount = 0
+    private var lastLabel = "standing"
+
     private fun loopInference() {
         if (!running.get()) return
         try {
@@ -79,7 +83,7 @@ class InferenceEngine(
         if (!running.get()) return
         executor.execute {
             try {
-                Thread.sleep(inferenceIntervalMs)
+                Thread.sleep(currentIntervalMs)
             } catch (_: InterruptedException) {
                 return@execute
             }
@@ -122,9 +126,56 @@ class InferenceEngine(
 
     // ── Core inference ────────────────────────────────────────────────────────
 
+    private fun isStationary(flat: FloatArray): Boolean {
+        var sumMag = 0.0
+        var sumSqMag = 0.0
+        var maxGyr = 0.0f
+        val step = 2 // sub-sample every 2nd point for ultra-fast variance check
+        val count = windowSize / step
+        for (i in 0 until windowSize step step) {
+            val base = i * SensorBuffer.CHANNELS
+            val ax = flat[base]
+            val ay = flat[base + 1]
+            val az = flat[base + 2]
+            val mag = Math.sqrt((ax * ax + ay * ay + az * az).toDouble())
+            sumMag += mag
+            sumSqMag += mag * mag
+            val gyr = Math.abs(flat[base + 3]) + Math.abs(flat[base + 4]) + Math.abs(flat[base + 5])
+            if (gyr > maxGyr) maxGyr = gyr
+        }
+        val mean = sumMag / count
+        val variance = (sumSqMag / count) - (mean * mean)
+        return variance < 0.05 && maxGyr < 0.25f
+    }
+
     private fun runInference() {
         val currentModule = module ?: return
         val flat = buffer.copyWindow(windowSize) ?: return   // not enough data yet
+
+        // ── Background Power Optimization ─────────────────────────────────────
+        // When device is completely motionless (e.g., sitting on desk or in pocket while still),
+        // throttle PyTorch forward passes to preserve battery and CPU.
+        val stationary = isStationary(flat)
+        if (stationary) {
+            consecutiveStationaryCount++
+            if (consecutiveStationaryCount > 2) {
+                // Determine resting posture from gravity orientation without running PyTorch
+                val base = (windowSize - 1) * SensorBuffer.CHANNELS
+                val az = flat[base + 2]
+                val ay = flat[base + 1]
+                val restingLabel = if (Math.abs(az) > 7.0f) "lying" else if (Math.abs(ay) > 6.0f) "standing" else "sitting"
+                lastLabel = restingLabel
+                currentIntervalMs = 1000L // relax check interval to 1 Hz
+                val restingProbs = FloatArray(labels.size) { idx ->
+                    if (labels[idx] == restingLabel) 0.95f else 0.01f
+                }
+                onResult(restingLabel, 0.95f, restingProbs)
+                return
+            }
+        } else {
+            consecutiveStationaryCount = 0
+            currentIntervalMs = inferenceIntervalMs // restore 400ms for active motion
+        }
 
         // Input tensor shape: (1, windowSize, 6)  — float32
         val inputTensor = Tensor.fromBlob(
@@ -140,6 +191,7 @@ class InferenceEngine(
         val probs  = softmax(logits)
         val best   = probs.indices.maxByOrNull { probs[it] } ?: 0
         val label  = labels.getOrElse(best) { "unknown" }
+        lastLabel  = label
 
         onResult(label, probs[best], probs)
     }

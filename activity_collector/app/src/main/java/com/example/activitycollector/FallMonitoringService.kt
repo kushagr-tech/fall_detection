@@ -1,5 +1,6 @@
 package com.example.activitycollector
 
+import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -25,20 +26,22 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * FallMonitoringService
  * =====================
- * A dedicated Android Foreground Service that runs 24/7 continuous sensor
- * collection, PyTorch Mobile sliding-window inference, and fall detection.
+ * A dedicated Android Foreground Service that runs continuous sensor collection,
+ * PyTorch Mobile sliding-window inference, fall detection, and emergency SOS dispatch.
  *
  * Core Capabilities:
  * 1. Continues active sensor sampling and inference when the screen is locked
- *    or the app is minimized (via PARTIAL_WAKE_LOCK and foreground status).
- * 2. Runs on-device ML model on a 50 Hz, 100-sample sliding window every 400 ms.
- * 3. Dispatches high-priority FullScreenIntent alerts on fall confirmation.
- * 4. Bridges to MainActivity when visible and functions autonomously when hidden.
+ *    or the app is minimized / swiped away (via PARTIAL_WAKE_LOCK and foreground status).
+ * 2. StepSetGo-style survivability: Survives task kill via onTaskRemoved and device reboot via BootReceiver.
+ * 3. Autonomous emergency countdown: Escalates to phone call (Contact 1) and SMS (all contacts)
+ *    even if the user is unconscious and never unlocks the phone.
+ * 4. Runs on-device ML model on a 50 Hz, 100-sample sliding window with motion-gated power savings.
  */
 class FallMonitoringService : Service(), SensorEventListener {
 
@@ -53,6 +56,7 @@ class FallMonitoringService : Service(), SensorEventListener {
         const val ACTION_START_MONITORING = "com.example.activitycollector.ACTION_START"
         const val ACTION_STOP_MONITORING  = "com.example.activitycollector.ACTION_STOP"
         const val ACTION_DISMISS_ALERT    = "com.example.activitycollector.ACTION_DISMISS"
+        const val ACTION_TRIGGER_SOS      = "com.example.activitycollector.ACTION_TRIGGER_SOS"
 
         const val EXTRA_FALL_ALERT = "extra_fall_alert"
     }
@@ -62,6 +66,8 @@ class FallMonitoringService : Service(), SensorEventListener {
         fun onFallPhaseChanged(phase: FallDetector.Phase, description: String)
         fun onFallConfirmed()
         fun onFallDismissed()
+        fun onCountdownTick(secondsRemaining: Int)
+        fun onSosDispatched(summary: String)
         fun onSampleCountChanged(count: Int, durationSeconds: Long)
     }
 
@@ -90,7 +96,7 @@ class FallMonitoringService : Service(), SensorEventListener {
     private var recordingLabel = "standing"
     private var recordingStartMs = 0L
 
-    // ── Alarms & Haptics ──────────────────────────────────────────────────────
+    // ── Alarms, Haptics & SOS Escalation ──────────────────────────────────────
     private var vibrator: Vibrator? = null
     private var ringtone: Ringtone? = null
     private val uiHandler = Handler(Looper.getMainLooper())
@@ -98,6 +104,27 @@ class FallMonitoringService : Service(), SensorEventListener {
     private var currentLabel = "—"
     private var currentConfidence = 0f
     private var lastNotificationUpdateMs = 0L
+
+    var alertSecondsRemaining = 30
+        private set
+    var isAlertActive = false
+        private set
+
+    private val countdownRunnable = object : Runnable {
+        override fun run() {
+            if (!isAlertActive) return
+            alertSecondsRemaining--
+            uiHandler.post {
+                listener?.onCountdownTick(alertSecondsRemaining)
+            }
+
+            if (alertSecondsRemaining <= 0) {
+                executeEmergencyProtocol()
+            } else {
+                uiHandler.postDelayed(this, 1000L)
+            }
+        }
+    }
 
     inner class LocalBinder : Binder() {
         fun getService(): FallMonitoringService = this@FallMonitoringService
@@ -198,6 +225,7 @@ class FallMonitoringService : Service(), SensorEventListener {
             ACTION_START_MONITORING -> startMonitoring()
             ACTION_STOP_MONITORING  -> stopMonitoring()
             ACTION_DISMISS_ALERT    -> dismissFall()
+            ACTION_TRIGGER_SOS      -> executeEmergencyProtocol()
         }
 
         return START_STICKY
@@ -206,6 +234,7 @@ class FallMonitoringService : Service(), SensorEventListener {
     fun startMonitoring() {
         if (isMonitoring.getAndSet(true)) return
 
+        BootReceiver.setMonitoringPersistedState(this, true)
         wakeLock?.acquire(12 * 60 * 60 * 1000L) // 12 hr safety cap
 
         val periodUs = 20_000 // 50 Hz
@@ -223,6 +252,10 @@ class FallMonitoringService : Service(), SensorEventListener {
     fun stopMonitoring() {
         if (!isMonitoring.getAndSet(false)) return
 
+        BootReceiver.setMonitoringPersistedState(this, false)
+        isAlertActive = false
+        uiHandler.removeCallbacks(countdownRunnable)
+
         stopRecording()
         sensorManager.unregisterListener(this)
         inferenceEngine.stop()
@@ -236,6 +269,34 @@ class FallMonitoringService : Service(), SensorEventListener {
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
         Log.i(TAG, "Fall Monitoring Service stopped")
+    }
+
+    // ── Survivability (StepSetGo style) ───────────────────────────────────────
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        Log.w(TAG, "onTaskRemoved: Task cleared. Scheduling resurrection alarm...")
+        if (isMonitoring.get()) {
+            val restartIntent = Intent(applicationContext, ServiceRestartReceiver::class.java).apply {
+                action = ServiceRestartReceiver.ACTION_RESTART_SERVICE
+            }
+            val pendingIntent = PendingIntent.getBroadcast(
+                applicationContext,
+                1003,
+                restartIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            try {
+                alarmManager.set(
+                    AlarmManager.RTC_WAKEUP,
+                    System.currentTimeMillis() + 1000L,
+                    pendingIntent
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Error scheduling restart alarm: ${e.message}")
+            }
+        }
     }
 
     // ── Recording Helpers (for CSV collection) ────────────────────────────────
@@ -298,8 +359,12 @@ class FallMonitoringService : Service(), SensorEventListener {
 
     private fun triggerFallAlert() {
         Log.w(TAG, "!!! FALL CONFIRMED BY INFERENCE ENGINE & FALL DETECTOR !!!")
+        isAlertActive = true
+        alertSecondsRemaining = 30
+        uiHandler.removeCallbacks(countdownRunnable)
+        uiHandler.postDelayed(countdownRunnable, 1000L)
 
-        // 0. Automatically turn on the display screen
+        // 0. Automatically turn on display screen
         try {
             val pm = getSystemService(POWER_SERVICE) as PowerManager
             @Suppress("DEPRECATION")
@@ -307,7 +372,7 @@ class FallMonitoringService : Service(), SensorEventListener {
                 PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.ON_AFTER_RELEASE,
                 "ActivityCollector:ScreenAlertWakeLock"
             )
-            screenLock.acquire(15_000L) // Keep screen on for alert
+            screenLock.acquire(30_000L) // Keep screen on for duration of alert
         } catch (e: Exception) {
             Log.w(TAG, "Could not acquire screen wake lock: ${e.message}")
         }
@@ -377,7 +442,9 @@ class FallMonitoringService : Service(), SensorEventListener {
     }
 
     fun dismissFall() {
-        Log.i(TAG, "Fall alert dismissed")
+        Log.i(TAG, "Fall alert dismissed by user")
+        isAlertActive = false
+        uiHandler.removeCallbacks(countdownRunnable)
         stopAlertFeedback()
         fallDetector.dismissFall()
 
@@ -386,6 +453,32 @@ class FallMonitoringService : Service(), SensorEventListener {
 
         uiHandler.post {
             listener?.onFallDismissed()
+        }
+    }
+
+    fun executeEmergencyProtocol() {
+        Log.w(TAG, "🚨 EXECUTING EMERGENCY SOS PROTOCOL (Timer expired or SOS tapped)")
+        isAlertActive = false
+        uiHandler.removeCallbacks(countdownRunnable)
+        stopAlertFeedback()
+
+        val result = EmergencyDispatcher.dispatchEmergency(this)
+
+        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        nm.cancel(NOTIFICATION_ID_ALERT)
+
+        val sosNotification = NotificationCompat.Builder(this, CHANNEL_ALERT)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setContentTitle("🚨 EMERGENCY SOS DISPATCHED")
+            .setContentText(result.summary)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(result.summary))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .build()
+        nm.notify(NOTIFICATION_ID_ALERT, sosNotification)
+
+        uiHandler.post {
+            listener?.onSosDispatched(result.summary)
         }
     }
 
@@ -485,11 +578,13 @@ class FallMonitoringService : Service(), SensorEventListener {
 
     fun registerListener(l: ServiceListener) {
         this.listener = l
-        // Immediately sync current state
         if (currentLabel.isNotEmpty() && currentLabel != "—") {
             l.onInferenceUpdate(currentLabel, currentConfidence, floatArrayOf())
         }
         l.onFallPhaseChanged(fallDetector.currentPhase, "")
+        if (isAlertActive) {
+            l.onCountdownTick(alertSecondsRemaining)
+        }
     }
 
     fun unregisterListener() {

@@ -4,8 +4,6 @@ import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -19,52 +17,30 @@ import androidx.core.content.ContextCompat
  * A full-screen emergency modal displayed when FallDetector confirms a fall.
  *
  * Features:
- * - 30-second countdown with auto-escalation
- * - "I am okay" and "Cancel alert" dismissal buttons
- * - Post-timeout simulated emergency escalation display
- * - Full-screen layout with wake-up and show-when-locked flags
+ * - Real-time countdown driven by FallMonitoringService
+ * - Displays registered primary contact to be called and SMS recipients count
+ * - "I am okay ✓" and "Cancel alert" dismissal buttons
+ * - "🚨 Call SOS Now" immediate help button (bypasses countdown)
+ * - Post-escalation status banner showing dispatch results
  */
 class FallAlertDialog(
     private val context: Context,
     private val onCancelled: () -> Unit,
-    private val onTimeout:   () -> Unit = {},
+    private val onSosNow:    () -> Unit = {},
 ) {
 
-    companion object {
-        private const val AUTO_DISMISS_SECONDS = 30
-    }
-
     private val dialog = Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
-    private val handler = Handler(Looper.getMainLooper())
-    private var secondsLeft = AUTO_DISMISS_SECONDS
 
     private var tvTitle: TextView? = null
     private var tvBody: TextView? = null
+    private var tvEmergencyDetails: TextView? = null
     private var tvCountdown: TextView? = null
-    private var isTimedOut = false
+    private var btnSosNow: Button? = null
 
-    private val countdownRunnable = object : Runnable {
-        override fun run() {
-            secondsLeft--
-            tvCountdown?.text = context.getString(R.string.fall_alert_countdown, secondsLeft)
-
-            if (secondsLeft <= 0) {
-                isTimedOut = true
-                showEscalatedState()
-                onTimeout()
-            } else {
-                handler.postDelayed(this, 1_000)
-            }
-        }
-    }
-
-    fun show() {
+    fun show(secondsRemaining: Int = 30) {
         if (dialog.isShowing) return
 
-        isTimedOut = false
-        secondsLeft = AUTO_DISMISS_SECONDS
-
-        val view = buildView()
+        val view = buildView(secondsRemaining)
         dialog.setContentView(view)
         dialog.window?.apply {
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
@@ -77,36 +53,40 @@ class FallAlertDialog(
         }
         dialog.setCancelable(false)
         dialog.show()
-
-        handler.postDelayed(countdownRunnable, 1_000)
     }
 
     fun dismiss() {
-        handler.removeCallbacks(countdownRunnable)
         if (dialog.isShowing) dialog.dismiss()
     }
 
     val isShowing: Boolean get() = dialog.isShowing
 
-    private fun showEscalatedState() {
-        tvTitle?.text = "EMERGENCY PROTOCOL ACTIVATED (SIMULATED)"
-        tvBody?.text = "30-second timer elapsed without response.\n\nIn live production, an automated SMS/call with GPS location would be dispatched to registered caregivers and emergency contacts.\n\n(No actual emergency services contacted)."
-        tvCountdown?.text = "🚨 SIMULATED RESCUE SIGNAL SENT"
-        tvCountdown?.setTextColor(0xFFFFDD44.toInt())
+    fun updateCountdown(secondsLeft: Int) {
+        if (!dialog.isShowing) return
+        tvCountdown?.text = context.getString(R.string.fall_alert_countdown, secondsLeft)
     }
 
-    private fun buildView(): View {
+    fun showEscalatedState(summary: String) {
+        if (!dialog.isShowing) return
+        tvTitle?.text = "🚨 EMERGENCY SOS DISPATCHED"
+        tvBody?.text = summary
+        tvCountdown?.text = "Call placed & SMS sent with GPS coordinates."
+        tvCountdown?.setTextColor(0xFFFFDD44.toInt())
+        btnSosNow?.visibility = View.GONE
+    }
+
+    private fun buildView(initialSeconds: Int): View {
         val root = android.widget.LinearLayout(context).apply {
             orientation = android.widget.LinearLayout.VERTICAL
             gravity     = android.view.Gravity.CENTER
             setBackgroundColor(ContextCompat.getColor(context, R.color.fall_alert_bg))
-            setPadding(48, 80, 48, 80)
+            setPadding(48, 60, 48, 60)
         }
 
         // ── Warning Icon ──────────────────────────────────────────────────────
         TextView(context).apply {
             text     = "⚠️"
-            textSize = 72f
+            textSize = 68f
             gravity  = android.view.Gravity.CENTER
             root.addView(this)
         }
@@ -118,7 +98,7 @@ class FallAlertDialog(
             setTextColor(Color.WHITE)
             typeface  = android.graphics.Typeface.DEFAULT_BOLD
             gravity   = android.view.Gravity.CENTER
-            setPadding(0, 24, 0, 16)
+            setPadding(0, 16, 0, 12)
             root.addView(this)
         }
 
@@ -128,22 +108,62 @@ class FallAlertDialog(
             textSize  = 16f
             setTextColor(0xEEFFFFFF.toInt())
             gravity   = android.view.Gravity.CENTER
-            setPadding(0, 0, 0, 32)
+            setPadding(0, 0, 0, 16)
+            root.addView(this)
+        }
+
+        // ── Contact Info Card ─────────────────────────────────────────────────
+        val contactManager = EmergencyContactManager(context)
+        val contacts = contactManager.getContacts()
+        val primary = contacts.firstOrNull()
+
+        tvEmergencyDetails = TextView(context).apply {
+            val detailsText = if (primary != null) {
+                "📞 Direct Call: ${primary.name} (${primary.phone})\n💬 Emergency SMS: ${contacts.size} contact(s) with GPS link"
+            } else {
+                "⚠️ No emergency contacts configured in app!\nPlease add contacts in settings."
+            }
+            text = detailsText
+            textSize = 14f
+            setTextColor(0xDDFFFFFF.toInt())
+            gravity = android.view.Gravity.CENTER
+            setPadding(24, 16, 24, 16)
+            setBackgroundColor(0x33000000)
             root.addView(this)
         }
 
         // ── Countdown ─────────────────────────────────────────────────────────
         tvCountdown = TextView(context).apply {
-            text      = context.getString(R.string.fall_alert_countdown, AUTO_DISMISS_SECONDS)
-            textSize  = 16f
+            text      = context.getString(R.string.fall_alert_countdown, initialSeconds)
+            textSize  = 18f
             typeface  = android.graphics.Typeface.DEFAULT_BOLD
             setTextColor(0xFFFFFFFF.toInt())
             gravity   = android.view.Gravity.CENTER
-            setPadding(0, 0, 0, 48)
+            setPadding(0, 24, 0, 24)
             root.addView(this)
         }
 
-        // ── Buttons ───────────────────────────────────────────────────────────
+        // ── Immediate SOS Button ──────────────────────────────────────────────
+        btnSosNow = Button(context).apply {
+            text = "🚨 CALL HELP NOW (SOS)"
+            setTextColor(Color.WHITE)
+            setBackgroundColor(0xFF991B1B.toInt()) // darker red
+            textSize = 15f
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            val lp = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = 16
+            }
+            layoutParams = lp
+            setOnClickListener {
+                onSosNow()
+            }
+            root.addView(this)
+        }
+
+        // ── Dismiss Buttons Row ───────────────────────────────────────────────
         val btnRow = android.widget.LinearLayout(context).apply {
             orientation = android.widget.LinearLayout.HORIZONTAL
             gravity     = android.view.Gravity.CENTER
@@ -157,7 +177,7 @@ class FallAlertDialog(
             textSize = 15f
             val lp = android.widget.LinearLayout.LayoutParams(0,
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
-                marginEnd = 16
+                marginEnd = 12
             }
             layoutParams = lp
             setOnClickListener {
@@ -169,12 +189,13 @@ class FallAlertDialog(
 
         Button(context).apply {
             text    = context.getString(R.string.fall_btn_okay)
-            setTextColor(ContextCompat.getColor(context, R.color.fall_alert_bg))
-            setBackgroundColor(0xFF22C55E.toInt())
+            setTextColor(Color.WHITE)
+            setBackgroundColor(0xFF16A34A.toInt()) // vibrant green
             textSize = 15f
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
             val lp = android.widget.LinearLayout.LayoutParams(0,
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
-                marginStart = 16
+                marginStart = 12
             }
             layoutParams = lp
             setOnClickListener {

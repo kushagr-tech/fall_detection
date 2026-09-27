@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!--
-        WRITE_EXTERNAL_STORAGE is required on API < 29 to save CSV files to
-        the public Downloads folder. On API 29+ scoped storage is used and
-        no runtime permission is needed for app-specific directories.
-    -->
+    <!-- Storage (API < 29 for CSV exports) -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
+
+    <!-- 24/7 Background Foreground Service & Sensors -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -16,9 +14,21 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
 
-    <!-- Declared so the OS can show this app in "sensor" permission lists -->
+    <!-- StepSetGo Survivability & Persistence -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!-- Emergency SOS Dispatch -->
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Hardware sensors -->
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="true" />
     <uses-feature android:name="android.hardware.sensor.gyroscope"     android:required="true" />
+    <uses-feature android:name="android.hardware.telephony"           android:required="false" />
+    <uses-feature android:name="android.hardware.location.gps"        android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -44,6 +54,27 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="health" />
+
+        <!-- Receivers for Boot & App Resurrection -->
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".ServiceRestartReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.activitycollector.ACTION_RESTART_SERVICE" />
+            </intent-filter>
+        </receiver>
 
     </application>
 </manifest>

@@ -6,15 +6,23 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
+import android.provider.Settings
+import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
 import android.widget.ArrayAdapter
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -25,12 +33,14 @@ import com.example.activitycollector.databinding.ActivityMainBinding
  * ============
  * Front-end dashboard for the Activity Collector and Fall Detection System.
  *
- * Connected to FallMonitoringService for continuous background monitoring,
- * real-time inference feedback, sensor recording, and emergency alert escalation.
+ * Connected to FallMonitoringService for continuous 24/7 background monitoring,
+ * real-time inference feedback, sensor recording, emergency contact management,
+ * and automated SOS dispatch.
  */
 class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener {
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var contactManager: EmergencyContactManager
 
     // ── Service Connection ────────────────────────────────────────────────────
     private var monitoringService: FallMonitoringService? = null
@@ -52,8 +62,9 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
                     val label = binding.spinnerLabel.selectedItem?.toString() ?: "standing"
                     s.startRecording(label, rateHz)
                 }
-                if (s.fallDetector.currentPhase == FallDetector.Phase.CONFIRMED) {
+                if (s.isAlertActive || s.fallDetector.currentPhase == FallDetector.Phase.CONFIRMED) {
                     showFallAlert()
+                    fallAlertDialog.updateCountdown(s.alertSecondsRemaining)
                 }
             }
         }
@@ -70,9 +81,6 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
 
     // ── Local records cache for export after service stop ─────────────────────
     private val localRecords = mutableListOf<SensorDataRecord>()
-
-    // ── UI update handler ─────────────────────────────────────────────────────
-    private val uiHandler = Handler(Looper.getMainLooper())
 
     private val permissionRequestCode = 1001
 
@@ -94,10 +102,14 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        contactManager = EmergencyContactManager(this)
+
         configureLockScreenVisibility()
         setupLabelSpinner()
         setupSamplingRateInput()
         setupButtons()
+        setupEmergencyContacts()
+        setupBatteryOptimizationCard()
         setupFallAlertDialog()
 
         // Bind to background monitoring service if already running
@@ -105,6 +117,11 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
         bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
 
         handleAlertIntent(intent)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateBatteryOptimizationStatus()
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -156,18 +173,137 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
                 monitoringService?.dismissFall()
                 clearFallBanner()
             },
-            onTimeout = {
-                showToast(getString(R.string.fall_alert_timeout_msg))
-                monitoringService?.dismissFall()
-                clearFallBanner()
+            onSosNow = {
+                monitoringService?.executeEmergencyProtocol()
             }
         )
+    }
+
+    // ── Emergency Contacts Section ────────────────────────────────────────────
+
+    private fun setupEmergencyContacts() {
+        binding.btnAddContact.setOnClickListener {
+            showAddContactDialog()
+        }
+        renderEmergencyContacts()
+    }
+
+    private fun renderEmergencyContacts() {
+        val contacts = contactManager.getContacts()
+        binding.contactsContainer.removeAllViews()
+
+        if (contacts.isEmpty()) {
+            binding.tvEmptyContacts.visibility = View.VISIBLE
+            binding.tvContactCountBadge.text = "0 contacts"
+            return
+        }
+
+        binding.tvEmptyContacts.visibility = View.GONE
+        binding.tvContactCountBadge.text = "${contacts.size} contact(s)"
+
+        val inflater = LayoutInflater.from(this)
+        contacts.forEachIndexed { index, contact ->
+            val itemView = inflater.inflate(R.layout.item_emergency_contact, binding.contactsContainer, false)
+            val tvName = itemView.findViewById<TextView>(R.id.tvContactName)
+            val tvPhone = itemView.findViewById<TextView>(R.id.tvContactPhone)
+            val tvBadge = itemView.findViewById<TextView>(R.id.tvContactBadge)
+            val btnDelete = itemView.findViewById<ImageButton>(R.id.btnDeleteContact)
+
+            tvName.text = contact.name
+            tvPhone.text = contact.phone
+
+            if (index == 0) {
+                tvBadge.text = "★ Primary (Call + SMS)"
+                tvBadge.setBackgroundColor(ContextCompat.getColor(this, R.color.btn_start))
+            } else {
+                tvBadge.text = "SMS"
+                tvBadge.setBackgroundColor(ContextCompat.getColor(this, R.color.btn_export))
+            }
+
+            btnDelete.setOnClickListener {
+                AlertDialog.Builder(this)
+                    .setTitle("Remove Contact")
+                    .setMessage("Remove ${contact.name} from emergency contacts?")
+                    .setPositiveButton("Remove") { _, _ ->
+                        contactManager.removeContact(contact.id)
+                        renderEmergencyContacts()
+                        showToast("${contact.name} removed.")
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            }
+
+            binding.contactsContainer.addView(itemView)
+        }
+    }
+
+    private fun showAddContactDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_contact, null)
+        val etName = dialogView.findViewById<EditText>(R.id.etContactName)
+        val etPhone = dialogView.findViewById<EditText>(R.id.etContactPhone)
+
+        AlertDialog.Builder(this)
+            .setTitle("Add Emergency Contact")
+            .setView(dialogView)
+            .setPositiveButton("Save") { _, _ ->
+                val name = etName.text.toString().trim()
+                val phone = etPhone.text.toString().trim()
+                if (name.isNotEmpty() && phone.isNotEmpty()) {
+                    contactManager.addContact(name, phone)
+                    renderEmergencyContacts()
+                    checkAndRequestSosPermissions()
+                    showToast("Emergency contact saved: $name")
+                } else {
+                    showToast("Please provide both name and phone number.")
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    // ── Battery Optimization Card (StepSetGo style) ───────────────────────────
+
+    private fun setupBatteryOptimizationCard() {
+        binding.cardBatteryOptimization.setOnClickListener {
+            val pm = getSystemService(POWER_SERVICE) as PowerManager
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                try {
+                    val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                        data = Uri.parse("package:$packageName")
+                    }
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                    startActivity(intent)
+                }
+            } else {
+                showToast("Background battery optimization is already unrestricted. 24/7 protection is active!")
+            }
+        }
+        updateBatteryOptimizationStatus()
+    }
+
+    private fun updateBatteryOptimizationStatus() {
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
+        val isIgnored = pm.isIgnoringBatteryOptimizations(packageName)
+        if (isIgnored) {
+            binding.tvBatteryIcon.text = "🛡️"
+            binding.tvBatteryTitle.text = "24/7 Background Protection Active"
+            binding.tvBatterySubtitle.text = "Unrestricted execution enabled (survives app kill & sleep)"
+            binding.tvBatteryAction.text = "✓ Active"
+            binding.tvBatteryAction.setTextColor(ContextCompat.getColor(this, R.color.btn_start))
+        } else {
+            binding.tvBatteryIcon.text = "⚡"
+            binding.tvBatteryTitle.text = "24/7 Background Reliability"
+            binding.tvBatterySubtitle.text = "Tap to enable unrestricted execution (like StepSetGo)"
+            binding.tvBatteryAction.text = "Fix →"
+            binding.tvBatteryAction.setTextColor(ContextCompat.getColor(this, R.color.btn_export))
+        }
     }
 
     // ── User Actions ──────────────────────────────────────────────────────────
 
     private fun handleStart() {
-        // Check permissions
         val permissionsNeeded = mutableListOf<String>()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -175,6 +311,18 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
                 != PackageManager.PERMISSION_GRANTED) {
                 permissionsNeeded.add(Manifest.permission.POST_NOTIFICATIONS)
             }
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
+            != PackageManager.PERMISSION_GRANTED) {
+            permissionsNeeded.add(Manifest.permission.SEND_SMS)
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
+            != PackageManager.PERMISSION_GRANTED) {
+            permissionsNeeded.add(Manifest.permission.CALL_PHONE)
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED) {
+            permissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION)
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -193,6 +341,22 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
         }
 
         startMonitoringSession()
+    }
+
+    private fun checkAndRequestSosPermissions() {
+        val sosPerms = mutableListOf<String>()
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+            sosPerms.add(Manifest.permission.SEND_SMS)
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+            sosPerms.add(Manifest.permission.CALL_PHONE)
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            sosPerms.add(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+        if (sosPerms.isNotEmpty()) {
+            ActivityCompat.requestPermissions(this, sosPerms.toTypedArray(), permissionRequestCode)
+        }
     }
 
     private fun startMonitoringSession() {
@@ -277,6 +441,15 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
         clearFallBanner()
     }
 
+    override fun onCountdownTick(secondsRemaining: Int) {
+        fallAlertDialog.updateCountdown(secondsRemaining)
+    }
+
+    override fun onSosDispatched(summary: String) {
+        fallAlertDialog.showEscalatedState(summary)
+        showToast(summary)
+    }
+
     override fun onSampleCountChanged(count: Int, durationSeconds: Long) {
         binding.tvSampleCount.text = getString(R.string.sample_count_format, count)
         binding.tvDuration.text = getString(R.string.duration_format, durationSeconds / 60, durationSeconds % 60)
@@ -287,7 +460,9 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
     private fun showFallAlert() {
         binding.tvFallBanner.visibility = View.VISIBLE
         if (!fallAlertDialog.isShowing) {
-            fallAlertDialog.show()
+            val s = monitoringService
+            val sec = s?.alertSecondsRemaining ?: 30
+            fallAlertDialog.show(sec)
         }
     }
 
@@ -328,7 +503,8 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
             if (allGranted) {
                 startMonitoringSession()
             } else {
-                showToast("Permissions required for background fall monitoring.")
+                showToast("Some permissions not granted. Emergency SOS features may be limited.")
+                startMonitoringSession()
             }
         }
     }

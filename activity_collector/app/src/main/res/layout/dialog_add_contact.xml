@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Contact Name"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="6dp" />
+
+    <EditText
+        android:id="@+id/etContactName"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint="e.g. Mom, Doctor, Caregiver"
+        android:inputType="textPersonName"
+        android:textSize="15sp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:textColor="@color/text_primary"
+        android:background="@drawable/edittext_background"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Phone Number"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="6dp" />
+
+    <EditText
+        android:id="@+id/etContactPhone"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint="e.g. +91 9876543210"
+        android:inputType="phone"
+        android:textSize="15sp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:textColor="@color/text_primary"
+        android:background="@drawable/edittext_background"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Note: The 1st contact in the list receives an automated phone call. All contacts receive an emergency SMS with GPS coordinates."
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary" />
+
+</LinearLayout>
