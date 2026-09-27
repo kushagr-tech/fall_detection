@@ -1,470 +1,939 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
+    android:orientation="vertical"
     android:background="@color/background">
 
+    <!-- ══════════════════════════════════════════════════════════════════════
+         TOP APP BAR (Material 3 Style)
+         ══════════════════════════════════════════════════════════════════════ -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="20dp">
+        android:layout_height="64dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:background="@color/surface"
+        android:elevation="2dp">
 
-        <!-- ── Title ─────────────────────────────────────────────────────── -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/app_name"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginBottom="4dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/subtitle"
-            android:textSize="13sp"
-            android:textColor="@color/text_secondary"
-            android:layout_marginBottom="16dp" />
-
-        <!-- ── Recording status bar ──────────────────────────────────────── -->
-        <View
-            android:id="@+id/statusIndicator"
-            android:layout_width="match_parent"
-            android:layout_height="6dp"
-            android:background="@color/recording_idle"
-            android:layout_marginBottom="16dp" />
-
-        <!-- ══════════════════════════════════════════════════════════════════
-             INFERENCE PANEL — live activity + confidence
-             ══════════════════════════════════════════════════════════════════ -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/card_background"
-            android:padding="16dp"
-            android:layout_marginBottom="12dp">
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-            <!-- Label: "LIVE DETECTION" -->
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/inference_title"
-                android:textSize="11sp"
+                android:text="FallGuard AI"
+                android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="@color/text_secondary"
-                android:letterSpacing="0.12"
-                android:layout_marginBottom="10dp" />
+                android:textColor="@color/text_primary" />
 
-            <!-- Activity: WALKING -->
-            <LinearLayout
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/tvTopSubtitle"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/activity_prefix"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginEnd="8dp" />
-
-                <TextView
-                    android:id="@+id/tvActivityLabel"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/activity_idle"
-                    android:textSize="26sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:fontFamily="monospace" />
-
-            </LinearLayout>
-
-            <!-- Confidence: 96% -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/confidence_prefix"
-                    android:textSize="13sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginEnd="8dp" />
-
-                <TextView
-                    android:id="@+id/tvConfidence"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text=""
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary" />
-
-            </LinearLayout>
-
-            <!-- Confidence bar -->
-            <ProgressBar
-                android:id="@+id/tvConfidenceBar"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:max="100"
-                android:progress="0"
-                android:progressTint="@color/btn_start"
-                android:progressBackgroundTint="@color/recording_idle" />
+                android:text="24/7 Smart Fall Detection"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary" />
 
         </LinearLayout>
 
-        <!-- ══════════════════════════════════════════════════════════════════
-             FALL STATUS — phase indicator
-             ══════════════════════════════════════════════════════════════════ -->
+        <!-- Status Badges -->
         <TextView
-            android:id="@+id/tvFallStatus"
-            android:layout_width="match_parent"
+            android:id="@+id/tvLowBatteryBadge"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="14sp"
+            android:text="🔋 Low Battery"
+            android:textSize="11sp"
             android:textStyle="bold"
-            android:layout_marginBottom="4dp" />
-
-        <!-- ══════════════════════════════════════════════════════════════════
-             FALL ALERT BANNER — shown when fall is confirmed (before dialog)
-             ══════════════════════════════════════════════════════════════════ -->
-        <TextView
-            android:id="@+id/tvFallBanner"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/fall_banner_text"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/white"
-            android:background="@color/fall_alert_bg"
-            android:padding="12dp"
-            android:gravity="center"
+            android:textColor="@color/warning_amber"
+            android:background="@drawable/badge_pill"
+            android:backgroundTint="@color/warning_amber_light"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
             android:visibility="gone"
-            android:layout_marginBottom="12dp" />
+            android:layout_marginEnd="8dp" />
 
-        <!-- ── Activity label selector ───────────────────────────────────── -->
         <TextView
-            android:layout_width="match_parent"
+            android:id="@+id/tvTopStatusBadge"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/label_activity"
-            android:textSize="13sp"
+            android:text="● Guarding"
+            android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginBottom="6dp" />
-
-        <Spinner
-            android:id="@+id/spinnerLabel"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:background="@drawable/spinner_background"
-            android:layout_marginBottom="14dp" />
-
-        <!-- ── Sampling rate ─────────────────────────────────────────────── -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/label_sampling_rate"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginBottom="6dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
-
-            <EditText
-                android:id="@+id/etSamplingRate"
-                android:layout_width="100dp"
-                android:layout_height="48dp"
-                android:inputType="number"
-                android:textSize="16sp"
-                android:gravity="center"
-                android:textColor="@color/text_primary"
-                android:background="@drawable/edittext_background"
-                android:maxLength="3" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/hz_label"
-                android:textSize="13sp"
-                android:textColor="@color/text_secondary"
-                android:layout_marginStart="10dp" />
-
-        </LinearLayout>
-
-        <!-- ── Stats card ─────────────────────────────────────────────────── -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/card_background"
-            android:padding="14dp"
-            android:layout_marginBottom="16dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/stats_title"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_secondary"
-                android:letterSpacing="0.12"
-                android:layout_marginBottom="10dp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/duration_label"
-                        android:textSize="11sp"
-                        android:textColor="@color/text_secondary" />
-
-                    <TextView
-                        android:id="@+id/tvDuration"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/duration_default"
-                        android:textSize="26sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:fontFamily="monospace" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/samples_label"
-                        android:textSize="11sp"
-                        android:textColor="@color/text_secondary" />
-
-                    <TextView
-                        android:id="@+id/tvSampleCount"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/samples_default"
-                        android:textSize="26sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:fontFamily="monospace" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- ══════════════════════════════════════════════════════════════════
-             EMERGENCY SOS CONTACTS
-             ══════════════════════════════════════════════════════════════════ -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/card_background"
-            android:padding="16dp"
-            android:layout_marginBottom="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="6dp">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="EMERGENCY SOS CONTACTS"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_secondary"
-                    android:letterSpacing="0.1" />
-
-                <TextView
-                    android:id="@+id/tvContactCountBadge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0 contacts"
-                    android:textSize="11sp"
-                    android:textColor="@color/text_secondary" />
-
-            </LinearLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="If a fall is uncancelled, an automated call is placed to Contact #1 (Primary) and an emergency SMS with your GPS location is sent to all contacts."
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary"
-                android:layout_marginBottom="12dp" />
-
-            <!-- Container for dynamic contact items -->
-            <LinearLayout
-                android:id="@+id/contactsContainer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical" />
-
-            <TextView
-                android:id="@+id/tvEmptyContacts"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="⚠️ No emergency contacts added yet.\nTap below to add family or caregivers."
-                android:textSize="13sp"
-                android:textColor="@color/phase_orange"
-                android:gravity="center"
-                android:padding="12dp"
-                android:layout_marginBottom="8dp" />
-
-            <Button
-                android:id="@+id/btnAddContact"
-                android:layout_width="match_parent"
-                android:layout_height="44dp"
-                android:text="+ Add Emergency Contact"
-                android:textSize="13sp"
-                android:textColor="@color/white"
-                android:backgroundTint="@color/btn_export" />
-
-        </LinearLayout>
-
-        <!-- ══════════════════════════════════════════════════════════════════
-             BACKGROUND PERSISTENCE / BATTERY OPTIMIZATION
-             ══════════════════════════════════════════════════════════════════ -->
-        <LinearLayout
-            android:id="@+id/cardBatteryOptimization"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="@drawable/card_background"
-            android:padding="12dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:layout_marginBottom="16dp">
-
-            <TextView
-                android:id="@+id/tvBatteryIcon"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:gravity="center"
-                android:text="⚡"
-                android:textSize="18sp"
-                android:layout_marginEnd="10dp" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/tvBatteryTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="24/7 Background Protection"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary" />
-
-                <TextView
-                    android:id="@+id/tvBatterySubtitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Tap to enable unrestricted background execution"
-                    android:textSize="11sp"
-                    android:textColor="@color/text_secondary" />
-
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/tvBatteryAction"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Fix →"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:textColor="@color/btn_export"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp" />
-
-        </LinearLayout>
-
-        <!-- ── Control buttons ──────────────────────────────────────────── -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="10dp">
-
-            <Button
-                android:id="@+id/btnStart"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1"
-                android:text="@string/btn_start"
-                android:textSize="15sp"
-                android:backgroundTint="@color/btn_start"
-                android:layout_marginEnd="8dp" />
-
-            <Button
-                android:id="@+id/btnStop"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1"
-                android:text="@string/btn_stop"
-                android:textSize="15sp"
-                android:backgroundTint="@color/btn_stop"
-                android:enabled="false"
-                android:layout_marginStart="8dp" />
-
-        </LinearLayout>
-
-        <Button
-            android:id="@+id/btnExport"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="@string/btn_export"
-            android:textSize="15sp"
-            android:backgroundTint="@color/btn_export" />
+            android:textColor="@color/primary_emerald"
+            android:background="@drawable/badge_pill"
+            android:backgroundTint="@color/primary_emerald_light"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp" />
 
     </LinearLayout>
-</ScrollView>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         MAIN CONTENT CONTAINER (Tab Switcher)
+         ══════════════════════════════════════════════════════════════════════ -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- ──────────────────────────────────────────────────────────────────
+             TAB 1: GUARD DASHBOARD
+             ────────────────────────────────────────────────────────────────── -->
+        <ScrollView
+            android:id="@+id/viewDashboard"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <!-- ── 1. Hero Guard Status Card (Samsung Health Style) ────────── -->
+                <LinearLayout
+                    android:id="@+id/cardHeroGuard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/card_hero_guard"
+                    android:paddingTop="28dp"
+                    android:paddingBottom="24dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:layout_marginBottom="16dp">
+
+                    <FrameLayout
+                        android:layout_width="96dp"
+                        android:layout_height="96dp"
+                        android:layout_marginBottom="16dp">
+
+                        <View
+                            android:id="@+id/heroShieldCircle"
+                            android:layout_width="96dp"
+                            android:layout_height="96dp"
+                            android:background="@drawable/circle_hero_guard" />
+
+                        <TextView
+                            android:id="@+id/tvHeroIcon"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:text="🛡️"
+                            android:textSize="44sp" />
+
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/tvHeroTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="PROTECTION ACTIVE"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/primary_emerald_dark"
+                        android:letterSpacing="0.05"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:id="@+id/tvHeroSubtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Real-time 50 Hz continuous monitoring"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="20dp" />
+
+                    <Button
+                        android:id="@+id/btnToggleGuard"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:text="Pause Guard"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/white"
+                        android:backgroundTint="@color/primary_emerald"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp" />
+
+                </LinearLayout>
+
+                <!-- ── 2. Live Activity & Posture Card ────────────────────────── -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/card_m3_background"
+                    android:padding="18dp"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="REAL-TIME ACTIVITY &amp; POSTURE"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_secondary"
+                            android:letterSpacing="0.1" />
+
+                        <TextView
+                            android:id="@+id/tvConfidencePill"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="95% Confident"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/primary_emerald"
+                            android:background="@drawable/badge_pill"
+                            android:backgroundTint="@color/primary_emerald_light"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
+                            android:paddingTop="3dp"
+                            android:paddingBottom="3dp" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:id="@+id/tvActivityIcon"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:gravity="center"
+                            android:text="🚶"
+                            android:textSize="26sp"
+                            android:background="@drawable/badge_pill"
+                            android:backgroundTint="@color/surface_variant"
+                            android:layout_marginEnd="14dp" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvActivityLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="WALKING"
+                                android:textSize="22sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_primary"
+                                android:fontFamily="sans-serif-medium" />
+
+                            <TextView
+                                android:id="@+id/tvFallStatus"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Normal motion • Posture stable"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_secondary" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/progressBarConfidence"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:max="100"
+                        android:progress="95"
+                        android:progressTint="@color/primary_emerald"
+                        android:progressBackgroundTint="@color/surface_variant" />
+
+                </LinearLayout>
+
+                <!-- ── 3. Fall Banner (if triggered) ──────────────────────────── -->
+                <TextView
+                    android:id="@+id/tvFallBanner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="⚠️ Potential fall impact detected • Alert active"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    android:background="@drawable/card_m3_background"
+                    android:backgroundTint="@color/emergency_crimson"
+                    android:padding="16dp"
+                    android:gravity="center"
+                    android:visibility="gone"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- ── 4. Primary SOS Contact Quick Card ──────────────────────── -->
+                <LinearLayout
+                    android:id="@+id/cardPrimaryContactQuick"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/card_m3_background"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:gravity="center"
+                        android:text="📞"
+                        android:textSize="20sp"
+                        android:background="@drawable/badge_pill"
+                        android:backgroundTint="@color/primary_emerald_light"
+                        android:layout_marginEnd="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="PRIMARY EMERGENCY CONTACT"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_secondary"
+                            android:letterSpacing="0.08" />
+
+                        <TextView
+                            android:id="@+id/tvQuickContactName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="None configured"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                        <TextView
+                            android:id="@+id/tvQuickContactPhone"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tap to setup emergency contacts"
+                            android:textSize="12sp"
+                            android:textColor="@color/text_secondary" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Manage →"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/info_blue" />
+
+                </LinearLayout>
+
+                <!-- ── 5. Instant SOS Panic Button ────────────────────────────── -->
+                <Button
+                    android:id="@+id/btnInstantSos"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:text="🚨  TRIGGER EMERGENCY SOS"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    android:backgroundTint="@color/emergency_crimson"
+                    android:elevation="4dp"
+                    android:layout_marginBottom="12dp" />
+
+                <!-- Session Stats footer -->
+                <TextView
+                    android:id="@+id/tvSessionStats"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Session: 00:00 • 0 samples collected"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_tertiary"
+                    android:gravity="center"
+                    android:layout_marginBottom="16dp" />
+
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- ──────────────────────────────────────────────────────────────────
+             TAB 2: ALERT HISTORY
+             ────────────────────────────────────────────────────────────────── -->
+        <LinearLayout
+            android:id="@+id/viewHistory"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Incident History"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/tvHistoryCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 recorded incidents"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary" />
+
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnClearHistory"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Clear"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+            <!-- Empty History Placeholder -->
+            <LinearLayout
+                android:id="@+id/layoutEmptyHistory"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="visible">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🛡️"
+                    android:textSize="56sp"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="All Quiet • No Incidents"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="You are protected 24/7. When a fall occurs,\nit will appear here with full GPS and impact details."
+                    android:textSize="13sp"
+                    android:textColor="@color/text_secondary"
+                    android:gravity="center" />
+
+            </LinearLayout>
+
+            <!-- Scrollable list of history items -->
+            <ScrollView
+                android:id="@+id/scrollHistoryList"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/containerHistoryItems"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+            </ScrollView>
+
+        </LinearLayout>
+
+        <!-- ──────────────────────────────────────────────────────────────────
+             TAB 3: SETTINGS & PREFERENCES
+             ────────────────────────────────────────────────────────────────── -->
+        <ScrollView
+            android:id="@+id/viewSettings"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Settings &amp; Preferences"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- ── 1. Protection & Background Execution ─────────────────── -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="PROTECTION &amp; SYSTEM RELIABILITY"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_secondary"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/card_m3_background"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <!-- Switch: 24/7 Background Protection -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="24/7 Background Protection"
+                                android:textSize="15sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Monitors continuously even when app is killed or device reboots (StepSetGo style)"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_secondary" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchBackgroundTracking"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/divider"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Switch: Low Battery Mode -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Intelligent Low Battery Mode"
+                                android:textSize="15sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Auto-reduces sensor cycles and preserves battery when phone is below 20%"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_secondary" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchLowBatteryMode"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/divider"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Battery Optimization Whitelist Card -->
+                    <LinearLayout
+                        android:id="@+id/cardSettingsBatteryOptimization"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvSettingsBatteryTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Unrestricted Battery Execution"
+                                android:textSize="15sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/tvSettingsBatterySubtitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Grants permission so Android never freezes background sensors"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_secondary" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tvSettingsBatteryAction"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="✓ Active"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/primary_emerald" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- ── 2. Alarm, Siren & Sound ──────────────────────────────── -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="ALARM SIREN &amp; SOUND"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_secondary"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/card_m3_background"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:id="@+id/layoutRingtonePicker"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginBottom="12dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Alert Siren Sound"
+                                android:textSize="15sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/tvSelectedRingtone"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="System Emergency Alarm (Default)"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_secondary" />
+
+                        </LinearLayout>
+
+                        <Button
+                            android:id="@+id/btnPreviewRingtone"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="36dp"
+                            android:text="▶ Test"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/divider"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Countdown Duration -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Safety Countdown Timer"
+                                android:textSize="15sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Seconds before automated SOS call &amp; SMS are sent"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_secondary" />
+
+                        </LinearLayout>
+
+                        <Spinner
+                            android:id="@+id/spinnerCountdown"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- ── 3. Emergency Contacts Management ─────────────────────── -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="EMERGENCY CONTACTS"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_secondary"
+                        android:letterSpacing="0.1" />
+
+                    <TextView
+                        android:id="@+id/tvSettingsContactCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 contacts"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_secondary" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/card_m3_background"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Contact #1 receives direct automated phone call. All contacts receive an emergency SMS with live GPS link."
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Dynamic contacts list inside settings -->
+                    <LinearLayout
+                        android:id="@+id/containerSettingsContacts"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
+                    <Button
+                        android:id="@+id/btnSettingsAddContact"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:text="+ Add Emergency Contact"
+                        android:textSize="13sp"
+                        android:textColor="@color/white"
+                        android:backgroundTint="@color/primary_emerald"
+                        android:layout_marginTop="8dp" />
+
+                </LinearLayout>
+
+                <!-- ── 4. Developer & Continuous Learning Telemetry (Hidden here) -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="DATA &amp; CONTINUOUS LEARNING"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_secondary"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/card_m3_background"
+                    android:padding="16dp"
+                    android:layout_marginBottom="24dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Auto-Archive Fall Telemetry"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Silently logs incident sensor windows locally for model refinement"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_secondary" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchAutoArchive"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true" />
+
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/btnExportArchives"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:text="⬇  Export Archived Telemetry CSVs"
+                        android:textSize="13sp"
+                        android:textColor="@color/info_blue"
+                        android:layout_marginBottom="12dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Model: har_model.ptl (TorchScript Lite • 192 KB)\nArchitecture: Temporal CNN • Stride: 400ms • Sampling: 50 Hz"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_tertiary"
+                        android:fontFamily="monospace" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+        </ScrollView>
+
+    </FrameLayout>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         BOTTOM NAVIGATION BAR (Material 3)
+         ══════════════════════════════════════════════════════════════════════ -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface"
+        app:elevation="8dp"
+        app:itemIconTint="@color/text_secondary"
+        app:itemTextColor="@color/text_secondary"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav_menu" />
+
+</LinearLayout>

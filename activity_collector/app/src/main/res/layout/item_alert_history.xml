@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/card_m3_background"
+    android:padding="16dp"
+    android:layout_marginBottom="12dp">
+
+    <!-- Header: Icon, Relative Time, Outcome Badge -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:id="@+id/tvHistoryIcon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:text="🛡️"
+            android:textSize="18sp"
+            android:layout_marginEnd="8dp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvHistoryTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Fall Event"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                android:id="@+id/tvHistoryTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Today • 3:15 PM"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvHistoryBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Safe Check-in"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary_emerald"
+            android:background="@drawable/badge_pill"
+            android:backgroundTint="@color/primary_emerald_light"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp" />
+
+    </LinearLayout>
+
+    <!-- Incident Summary -->
+    <TextView
+        android:id="@+id/tvHistorySummary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="User checked in safely ('I am okay' ✓)"
+        android:textSize="13sp"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Fall Physics Metrics Pill Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/badge_pill"
+        android:backgroundTint="@color/surface_variant"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:layout_marginBottom="10dp">
+
+        <TextView
+            android:id="@+id/tvHistoryMetrics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Impact: 22.4 m/s² • Tilt: 38° • Confidence: 95%"
+            android:textSize="11sp"
+            android:textColor="@color/text_secondary"
+            android:fontFamily="monospace" />
+
+    </LinearLayout>
+
+    <!-- Location Button (if available) -->
+    <Button
+        android:id="@+id/btnHistoryMap"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:text="📍 View Incident Location"
+        android:textSize="11sp"
+        android:textColor="@color/info_blue"
+        android:backgroundTint="@color/info_blue_light"
+        android:visibility="gone" />
+
+</LinearLayout>

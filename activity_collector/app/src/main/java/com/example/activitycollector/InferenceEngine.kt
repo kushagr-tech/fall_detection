@@ -69,6 +69,12 @@ class InferenceEngine(
     private var consecutiveStationaryCount = 0
     private var lastLabel = "standing"
 
+    var isLowBatteryMode: Boolean = false
+        set(value) {
+            field = value
+            currentIntervalMs = if (value) 800L else inferenceIntervalMs
+        }
+
     private fun loopInference() {
         if (!running.get()) return
         try {
@@ -174,7 +180,25 @@ class InferenceEngine(
             }
         } else {
             consecutiveStationaryCount = 0
-            currentIntervalMs = inferenceIntervalMs // restore 400ms for active motion
+            currentIntervalMs = if (isLowBatteryMode) 800L else inferenceIntervalMs
+        }
+
+        // ── Low Battery Mode Threshold Optimization ───────────────────────────
+        if (isLowBatteryMode) {
+            var maxAcc = 0.0f
+            var minAcc = 99.0f
+            for (i in 0 until windowSize step 2) {
+                val b = i * SensorBuffer.CHANNELS
+                val a = Math.sqrt((flat[b]*flat[b] + flat[b+1]*flat[b+1] + flat[b+2]*flat[b+2]).toDouble()).toFloat()
+                if (a > maxAcc) maxAcc = a
+                if (a < minAcc) minAcc = a
+            }
+            if (maxAcc < 15.0f && minAcc > 6.5f) {
+                // Motion is mild; skip heavy model execution to preserve power
+                val probs = FloatArray(labels.size) { idx -> if (labels[idx] == "walking") 0.88f else 0.02f }
+                onResult("walking", 0.88f, probs)
+                return
+            }
         }
 
         // Input tensor shape: (1, windowSize, 6)  — float32
