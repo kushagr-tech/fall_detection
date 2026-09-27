@@ -491,13 +491,16 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
         binding.rbPresetCustom.setOnClickListener     { selectSensitivityPreset("custom") }
 
         // Custom Slider: Impact Force Spike
-        binding.sliderCustomImpact.value = appPreferences.customImpactThreshold.coerceIn(15.0f, 35.0f)
-        binding.tvLabelCustomImpact.text = "Impact Spike Threshold: ${"%.1f".format(appPreferences.customImpactThreshold)} m/s²"
+        val initialImpact = appPreferences.customImpactThreshold.coerceIn(15.0f, 35.0f)
+        val snappedImpact = Math.round(initialImpact).toFloat()
+        binding.sliderCustomImpact.value = snappedImpact
+        binding.tvLabelCustomImpact.text = "Impact Spike Threshold: ${"%.1f".format(snappedImpact)} m/s²"
         binding.sliderCustomImpact.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
-                appPreferences.customImpactThreshold = value
-                binding.tvLabelCustomImpact.text = "Impact Spike Threshold: ${"%.1f".format(value)} m/s²"
-                binding.tvLiveThreshold.text = "${"%.1f".format(value)} m/s²"
+                val rounded = Math.round(value).toFloat()
+                appPreferences.customImpactThreshold = rounded
+                binding.tvLabelCustomImpact.text = "Impact Spike Threshold: ${"%.1f".format(rounded)} m/s²"
+                binding.tvLiveThreshold.text = "${"%.1f".format(rounded)} m/s²"
                 monitoringService?.applySensitivityPreferences()
             }
         }
@@ -510,12 +513,16 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
         }
 
         // Custom Slider: Post-Fall Stillness Delay
-        binding.sliderCustomStillness.value = appPreferences.customStillnessSeconds.coerceIn(0.8f, 3.0f)
-        binding.tvLabelCustomStillness.text = "Post-Fall Stillness Delay: ${"%.1f".format(appPreferences.customStillnessSeconds)} seconds"
+        val initialStillness = appPreferences.customStillnessSeconds.coerceIn(0.5f, 3.0f)
+        val snappedStillness = ((Math.round((initialStillness - 0.5f) / 0.1f) * 0.1f) + 0.5f).coerceIn(0.5f, 3.0f)
+        val validStillness = String.format(java.util.Locale.US, "%.1f", snappedStillness).toFloat()
+        binding.sliderCustomStillness.value = validStillness
+        binding.tvLabelCustomStillness.text = "Post-Fall Stillness Delay: ${"%.1f".format(validStillness)} seconds"
         binding.sliderCustomStillness.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
-                appPreferences.customStillnessSeconds = value
-                binding.tvLabelCustomStillness.text = "Post-Fall Stillness Delay: ${"%.1f".format(value)} seconds"
+                val rounded = String.format(java.util.Locale.US, "%.1f", value).toFloat()
+                appPreferences.customStillnessSeconds = rounded
+                binding.tvLabelCustomStillness.text = "Post-Fall Stillness Delay: ${"%.1f".format(rounded)} seconds"
                 monitoringService?.applySensitivityPreferences()
             }
         }
@@ -534,10 +541,13 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
     }
 
     private fun selectSensitivityPreset(presetKey: String) {
+        val changed = appPreferences.sensitivityPreset != presetKey
         appPreferences.sensitivityPreset = presetKey
         monitoringService?.applySensitivityPreferences()
         updateSensitivityTabUi()
-        showToast("Sensitivity preset updated: ${getPresetTitle(presetKey)}")
+        if (changed) {
+            showToast("Sensitivity preset updated: ${getPresetTitle(presetKey)}")
+        }
     }
 
     private fun getPresetTitle(preset: String): String = when (preset) {

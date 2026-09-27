@@ -839,6 +839,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
+                        android:clickable="true"
+                        android:focusable="false"
                         android:visibility="gone"
                         android:layout_marginTop="12dp">
 
@@ -898,9 +900,9 @@
                             android:id="@+id/sliderCustomStillness"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:valueFrom="0.8"
+                            android:valueFrom="0.5"
                             android:valueTo="3.0"
-                            android:stepSize="0.2"
+                            android:stepSize="0.1"
                             android:value="1.5" />
 
                     </LinearLayout>

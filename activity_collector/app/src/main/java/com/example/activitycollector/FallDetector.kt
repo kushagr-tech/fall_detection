@@ -99,7 +99,8 @@ class FallDetector(
             "custom" -> {
                 svmSpikeThreshold = customSpike
                 requireFreefallDip = customFreefall
-                requiredStillWindows = (customStillSec / 0.4f).toInt().coerceAtLeast(1)
+                svmFreefallThreshold = if (customFreefall) 5.5f else 7.0f
+                requiredStillWindows = Math.round(customStillSec / 0.4f).toInt().coerceAtLeast(1)
                 fallModelConfThresh = 0.40f
                 minTiltChangeDeg = 28.0f
             }
@@ -150,10 +151,10 @@ class FallDetector(
                 }
 
                 // Initial fall initiation check:
-                // When requireFreefallDip is enabled (Desk-Safe mode), require weightlessness dip before impact.
+                // When requireFreefallDip is enabled (Desk-Safe / Custom mode), require weightlessness dip before impact.
                 // Placing a phone on a desk produces deceleration only, NEVER free-fall dip.
                 val isInitiated = if (requireFreefallDip) {
-                    (freefallDetected && accPeak > 18.0f) || (accPeak > svmSpikeThreshold && freefallDetected)
+                    freefallDetected && (accPeak >= (svmSpikeThreshold * 0.75f) || accPeak >= svmSpikeThreshold)
                 } else {
                     accPeak > svmSpikeThreshold || (freefallDetected && gyrPeak > 1.2f)
                 }
