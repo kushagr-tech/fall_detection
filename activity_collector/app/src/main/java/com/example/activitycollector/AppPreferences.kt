@@ -26,6 +26,11 @@ class AppPreferences(context: Context) {
         private const val KEY_COUNTDOWN_SECONDS   = "pref_countdown_seconds"
         private const val KEY_AUTO_ARCHIVE_DATA   = "pref_auto_archive_data"
         private const val KEY_VIBRATION_PATTERN   = "pref_vibration_pattern"
+        private const val KEY_THEME_MODE          = "pref_theme_mode"
+        private const val KEY_SENSITIVITY_PRESET  = "pref_sensitivity_preset"
+        private const val KEY_CUSTOM_IMPACT       = "pref_custom_impact"
+        private const val KEY_CUSTOM_FREEFALL     = "pref_custom_freefall"
+        private const val KEY_CUSTOM_STILLNESS    = "pref_custom_stillness"
     }
 
     private val prefs: SharedPreferences =
@@ -54,6 +59,26 @@ class AppPreferences(context: Context) {
     var vibrationPattern: String
         get() = prefs.getString(KEY_VIBRATION_PATTERN, "intense") ?: "intense"
         set(value) = prefs.edit().putString(KEY_VIBRATION_PATTERN, value).apply()
+
+    var themeMode: String
+        get() = prefs.getString(KEY_THEME_MODE, "system") ?: "system"
+        set(value) = prefs.edit().putString(KEY_THEME_MODE, value).apply()
+
+    var sensitivityPreset: String
+        get() = prefs.getString(KEY_SENSITIVITY_PRESET, "desk_safe") ?: "desk_safe"
+        set(value) = prefs.edit().putString(KEY_SENSITIVITY_PRESET, value).apply()
+
+    var customImpactThreshold: Float
+        get() = prefs.getFloat(KEY_CUSTOM_IMPACT, 24.0f)
+        set(value) = prefs.edit().putFloat(KEY_CUSTOM_IMPACT, value).apply()
+
+    var customRequireFreefall: Boolean
+        get() = prefs.getBoolean(KEY_CUSTOM_FREEFALL, true)
+        set(value) = prefs.edit().putBoolean(KEY_CUSTOM_FREEFALL, value).apply()
+
+    var customStillnessSeconds: Float
+        get() = prefs.getFloat(KEY_CUSTOM_STILLNESS, 1.5f)
+        set(value) = prefs.edit().putFloat(KEY_CUSTOM_STILLNESS, value).apply()
 
     fun getDefaultAlarmUri(): Uri {
         return RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)

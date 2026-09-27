@@ -58,4 +58,9 @@
     <color name="teal_700">#047857</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Theme Specific Tokens -->
+    <color name="hero_paused_bg">#FFFFFF</color>
+    <color name="hero_paused_circle">#F1F5F9</color>
+    <color name="input_bg">#F1F5F9</color>
 </resources>

@@ -27,9 +27,12 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import android.util.Log
+import android.provider.ContactsContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.activitycollector.databinding.ActivityMainBinding
@@ -108,19 +111,102 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
         }
     }
 
+    // ── Contact Picker Launchers & Callbacks ──────────────────────────────────
+    private var pendingContactCallback: ((String, String) -> Unit)? = null
+
+    private val contactPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val contactUri: Uri? = result.data?.data
+            if (contactUri != null) {
+                handleContactPicked(contactUri)
+            }
+        }
+    }
+
+    private val requestContactsPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { _ ->
+        // Proceed with picker intent either way (system picker works without READ_CONTACTS on Android 7+)
+        launchContactPickerIntent()
+    }
+
+    private fun pickContactWithPermission(callback: ((String, String) -> Unit)? = null) {
+        pendingContactCallback = callback
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+            launchContactPickerIntent()
+        } else {
+            requestContactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+        }
+    }
+
+    private fun launchContactPickerIntent() {
+        val pickIntent = Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI)
+        try {
+            contactPickerLauncher.launch(pickIntent)
+        } catch (e: Exception) {
+            showToast("Could not open contacts: ${e.message}")
+        }
+    }
+
+    private fun handleContactPicked(contactUri: Uri) {
+        val projection = arrayOf(
+            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+            ContactsContract.CommonDataKinds.Phone.NUMBER
+        )
+        var name = ""
+        var phone = ""
+        try {
+            contentResolver.query(contactUri, projection, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val nameIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                    val phoneIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                    if (nameIdx >= 0) name = cursor.getString(nameIdx) ?: ""
+                    if (phoneIdx >= 0) phone = cursor.getString(phoneIdx) ?: ""
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error reading contact from URI: ${e.message}")
+        }
+
+        if (phone.isNotEmpty()) {
+            if (name.isEmpty()) name = "Contact"
+            val callback = pendingContactCallback
+            if (callback != null) {
+                callback.invoke(name, phone)
+                pendingContactCallback = null
+            } else {
+                contactManager.addContact(name, phone)
+                renderSettingsContacts()
+                updateQuickContactCard()
+                checkAndRequestSosPermissions()
+                showToast("Added $name ($phone) to emergency contacts.")
+            }
+        } else {
+            showToast("Could not read phone number from selected contact.")
+        }
+    }
+
+    // ── Live Sensitivity Motion Tracker ───────────────────────────────────────
+    private var livePeakAcc = 9.8f
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        appPreferences = AppPreferences(this)
+        applyThemeMode(appPreferences.themeMode)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         contactManager = EmergencyContactManager(this)
         historyManager = AlertHistoryManager(this)
-        appPreferences = AppPreferences(this)
 
         configureLockScreenVisibility()
         setupNavigation()
         setupDashboard()
         setupHistoryTab()
+        setupSensitivityTab()
         setupSettingsTab()
         setupFallAlertDialog()
 
@@ -128,7 +214,28 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
         val serviceIntent = Intent(this, FallMonitoringService::class.java)
         bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
 
+        val initialTab = savedInstanceState?.getInt("KEY_SELECTED_TAB") ?: R.id.nav_dashboard
+        if (initialTab != R.id.nav_dashboard) {
+            binding.bottomNavigation.selectedItemId = initialTab
+        }
+
         handleAlertIntent(intent)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("KEY_SELECTED_TAB", binding.bottomNavigation.selectedItemId)
+    }
+
+    private fun applyThemeMode(mode: String) {
+        val targetMode = when (mode) {
+            "light" -> AppCompatDelegate.MODE_NIGHT_NO
+            "dark"  -> AppCompatDelegate.MODE_NIGHT_YES
+            else    -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+        }
+        if (AppCompatDelegate.getDefaultNightMode() != targetMode) {
+            AppCompatDelegate.setDefaultNightMode(targetMode)
+        }
     }
 
     override fun onResume() {
@@ -172,19 +279,30 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
                 R.id.nav_dashboard -> {
                     binding.viewDashboard.visibility = View.VISIBLE
                     binding.viewHistory.visibility   = View.GONE
+                    binding.viewSensitivity.visibility = View.GONE
                     binding.viewSettings.visibility  = View.GONE
                     true
                 }
                 R.id.nav_history -> {
                     binding.viewDashboard.visibility = View.GONE
                     binding.viewHistory.visibility   = View.VISIBLE
+                    binding.viewSensitivity.visibility = View.GONE
                     binding.viewSettings.visibility  = View.GONE
                     loadHistory()
+                    true
+                }
+                R.id.nav_sensitivity -> {
+                    binding.viewDashboard.visibility = View.GONE
+                    binding.viewHistory.visibility   = View.GONE
+                    binding.viewSensitivity.visibility = View.VISIBLE
+                    binding.viewSettings.visibility  = View.GONE
+                    updateSensitivityTabUi()
                     true
                 }
                 R.id.nav_settings -> {
                     binding.viewDashboard.visibility = View.GONE
                     binding.viewHistory.visibility   = View.GONE
+                    binding.viewSensitivity.visibility = View.GONE
                     binding.viewSettings.visibility  = View.VISIBLE
                     renderSettingsContacts()
                     true
@@ -357,9 +475,131 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
         }
     }
 
-    // ── Tab 3: Settings & Preferences ─────────────────────────────────────────
+    // ── Tab 3: Detection Sensitivity & Desk Surface Calibration ──────────────
+
+    private fun setupSensitivityTab() {
+        binding.cardPresetDeskSafe.setOnClickListener { selectSensitivityPreset("desk_safe") }
+        binding.rbPresetDeskSafe.setOnClickListener   { selectSensitivityPreset("desk_safe") }
+
+        binding.cardPresetBalanced.setOnClickListener { selectSensitivityPreset("balanced") }
+        binding.rbPresetBalanced.setOnClickListener   { selectSensitivityPreset("balanced") }
+
+        binding.cardPresetHigh.setOnClickListener     { selectSensitivityPreset("high") }
+        binding.rbPresetHigh.setOnClickListener       { selectSensitivityPreset("high") }
+
+        binding.cardPresetCustom.setOnClickListener   { selectSensitivityPreset("custom") }
+        binding.rbPresetCustom.setOnClickListener     { selectSensitivityPreset("custom") }
+
+        // Custom Slider: Impact Force Spike
+        binding.sliderCustomImpact.value = appPreferences.customImpactThreshold.coerceIn(15.0f, 35.0f)
+        binding.tvLabelCustomImpact.text = "Impact Spike Threshold: ${"%.1f".format(appPreferences.customImpactThreshold)} m/s²"
+        binding.sliderCustomImpact.addOnChangeListener { _, value, fromUser ->
+            if (fromUser) {
+                appPreferences.customImpactThreshold = value
+                binding.tvLabelCustomImpact.text = "Impact Spike Threshold: ${"%.1f".format(value)} m/s²"
+                binding.tvLiveThreshold.text = "${"%.1f".format(value)} m/s²"
+                monitoringService?.applySensitivityPreferences()
+            }
+        }
+
+        // Custom Switch: Require Free-Fall Weightlessness Dip
+        binding.switchCustomFreefall.isChecked = appPreferences.customRequireFreefall
+        binding.switchCustomFreefall.setOnCheckedChangeListener { _, isChecked ->
+            appPreferences.customRequireFreefall = isChecked
+            monitoringService?.applySensitivityPreferences()
+        }
+
+        // Custom Slider: Post-Fall Stillness Delay
+        binding.sliderCustomStillness.value = appPreferences.customStillnessSeconds.coerceIn(0.8f, 3.0f)
+        binding.tvLabelCustomStillness.text = "Post-Fall Stillness Delay: ${"%.1f".format(appPreferences.customStillnessSeconds)} seconds"
+        binding.sliderCustomStillness.addOnChangeListener { _, value, fromUser ->
+            if (fromUser) {
+                appPreferences.customStillnessSeconds = value
+                binding.tvLabelCustomStillness.text = "Post-Fall Stillness Delay: ${"%.1f".format(value)} seconds"
+                monitoringService?.applySensitivityPreferences()
+            }
+        }
+
+        // Live Peak Reset Button
+        binding.btnResetPeakAcc.setOnClickListener {
+            livePeakAcc = 9.8f
+            binding.tvLivePeakAcc.text = "9.8 m/s²"
+            binding.progressLiveAcc.progress = 10
+            binding.tvLiveCalibratorResult.text = "✅ SAFE • Desk placement will not trigger alert"
+            binding.tvLiveCalibratorResult.setTextColor(ContextCompat.getColor(this, R.color.primary_emerald))
+            binding.tvLiveCalibratorResult.backgroundTintList = ContextCompat.getColorStateList(this, R.color.primary_emerald_light)
+        }
+
+        updateSensitivityTabUi()
+    }
+
+    private fun selectSensitivityPreset(presetKey: String) {
+        appPreferences.sensitivityPreset = presetKey
+        monitoringService?.applySensitivityPreferences()
+        updateSensitivityTabUi()
+        showToast("Sensitivity preset updated: ${getPresetTitle(presetKey)}")
+    }
+
+    private fun getPresetTitle(preset: String): String = when (preset) {
+        "desk_safe" -> "Desk-Safe Calibration"
+        "balanced"  -> "Balanced Everyday Guard"
+        "high"      -> "High Vigilance (Elderly / Risk)"
+        "custom"    -> "Custom Fine-Tuning"
+        else        -> "Desk-Safe Calibration"
+    }
+
+    private fun getPresetDescription(preset: String): String = when (preset) {
+        "desk_safe" -> "Ignores desk placement & bed toss. Requires >26 m/s² impact + weightless free-fall dip."
+        "balanced"  -> "Balanced multi-phase sensitivity (>22 m/s² impact) for active everyday routines."
+        "high"      -> "Maximum protection (>18 m/s² impact) for frail individuals or soft, slow slips."
+        "custom"    -> "User-defined custom thresholds for impact, weightlessness dip, and stillness."
+        else        -> "Ignores desk placement & bed toss."
+    }
+
+    private fun updateSensitivityTabUi() {
+        val currentPreset = appPreferences.sensitivityPreset
+        binding.rbPresetDeskSafe.isChecked = (currentPreset == "desk_safe")
+        binding.rbPresetBalanced.isChecked = (currentPreset == "balanced")
+        binding.rbPresetHigh.isChecked     = (currentPreset == "high")
+        binding.rbPresetCustom.isChecked   = (currentPreset == "custom")
+
+        binding.containerCustomSensitivity.visibility = if (currentPreset == "custom") View.VISIBLE else View.GONE
+
+        binding.tvSensitivityActiveTitle.text = getPresetTitle(currentPreset)
+        binding.tvSensitivityActiveDesc.text  = getPresetDescription(currentPreset)
+
+        val threshold = when (currentPreset) {
+            "desk_safe" -> 26.0f
+            "balanced"  -> 22.0f
+            "high"      -> 18.0f
+            "custom"    -> appPreferences.customImpactThreshold
+            else        -> 26.0f
+        }
+        binding.tvLiveThreshold.text = "${"%.1f".format(threshold)} m/s²"
+    }
+
+    // ── Tab 4: Settings & Preferences ─────────────────────────────────────────
 
     private fun setupSettingsTab() {
+        // 0. Appearance & Theme Mode Toggle
+        when (appPreferences.themeMode) {
+            "light" -> binding.toggleThemeGroup.check(R.id.btnThemeLight)
+            "dark"  -> binding.toggleThemeGroup.check(R.id.btnThemeDark)
+            else    -> binding.toggleThemeGroup.check(R.id.btnThemeSystem)
+        }
+        binding.toggleThemeGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked) return@addOnButtonCheckedListener
+            val newMode = when (checkedId) {
+                R.id.btnThemeLight -> "light"
+                R.id.btnThemeDark  -> "dark"
+                else               -> "system"
+            }
+            if (appPreferences.themeMode != newMode) {
+                appPreferences.themeMode = newMode
+                applyThemeMode(newMode)
+            }
+        }
+
         // 1. Background Tracking Switch
         binding.switchBackgroundTracking.isChecked = appPreferences.isBackgroundTrackingEnabled
         binding.switchBackgroundTracking.setOnCheckedChangeListener { _, isChecked ->
@@ -450,6 +690,9 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
         }
 
         // 9. Emergency Contacts in Settings
+        binding.btnSettingsPickContact.setOnClickListener {
+            pickContactWithPermission(null)
+        }
         binding.btnSettingsAddContact.setOnClickListener {
             showAddContactDialog()
         }
@@ -555,6 +798,14 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_contact, null)
         val etName = dialogView.findViewById<EditText>(R.id.etContactName)
         val etPhone = dialogView.findViewById<EditText>(R.id.etContactPhone)
+        val btnPick = dialogView.findViewById<Button>(R.id.btnPickFromContacts)
+
+        btnPick?.setOnClickListener {
+            pickContactWithPermission { name, phone ->
+                etName.setText(name)
+                etPhone.setText(phone)
+            }
+        }
 
         AlertDialog.Builder(this)
             .setTitle("Add Emergency Contact")
@@ -705,6 +956,37 @@ class MainActivity : AppCompatActivity(), FallMonitoringService.ServiceListener 
     override fun onSampleCountChanged(count: Int, durationSeconds: Long) {
         val durStr = String.format("%02d:%02d", durationSeconds / 60, durationSeconds % 60)
         binding.tvSessionStats.text = "Session: $durStr • $count telemetry samples"
+    }
+
+    override fun onSensorMagnitudeUpdate(currentAcc: Float) {
+        if (binding.viewSensitivity.visibility != View.VISIBLE) return
+
+        binding.tvLiveCurrentAcc.text = "${"%.1f".format(currentAcc)} m/s²"
+        if (currentAcc > livePeakAcc) {
+            livePeakAcc = currentAcc
+            binding.tvLivePeakAcc.text = "${"%.1f".format(livePeakAcc)} m/s²"
+        }
+
+        val currentInt = currentAcc.toInt().coerceIn(0, 40)
+        binding.progressLiveAcc.progress = currentInt
+
+        val thresh = when (appPreferences.sensitivityPreset) {
+            "desk_safe" -> 26.0f
+            "balanced"  -> 22.0f
+            "high"      -> 18.0f
+            "custom"    -> appPreferences.customImpactThreshold
+            else        -> 26.0f
+        }
+
+        if (livePeakAcc >= thresh) {
+            binding.tvLiveCalibratorResult.text = "⚠️ HIGH IMPACT • Exceeds threshold (${"%.1f".format(livePeakAcc)} m/s²)"
+            binding.tvLiveCalibratorResult.setTextColor(ContextCompat.getColor(this, R.color.warning_amber))
+            binding.tvLiveCalibratorResult.backgroundTintList = ContextCompat.getColorStateList(this, R.color.warning_amber_light)
+        } else {
+            binding.tvLiveCalibratorResult.text = "✅ SAFE • Desk placement (${"%.1f".format(livePeakAcc)} m/s²) will not trigger"
+            binding.tvLiveCalibratorResult.setTextColor(ContextCompat.getColor(this, R.color.primary_emerald))
+            binding.tvLiveCalibratorResult.backgroundTintList = ContextCompat.getColorStateList(this, R.color.primary_emerald_light)
+        }
     }
 
     // ── Alert UI ──────────────────────────────────────────────────────────────

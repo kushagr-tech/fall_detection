@@ -1,40 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="background">#0F172A</color>
+    <!-- Modern Material 3 Dark Palette (AMOLED / Deep Slate) -->
+    <color name="background">#0B0F19</color>
+    <color name="surface">#151C2C</color>
+    <color name="surface_variant">#1E293B</color>
+    <color name="card_bg">#151C2C</color>
+    <color name="card_border">#232F45</color>
+    <color name="divider">#232F45</color>
+
+    <!-- High-Contrast Readable Text Tokens -->
     <color name="text_primary">#F8FAFC</color>
     <color name="text_secondary">#94A3B8</color>
+    <color name="text_tertiary">#64748B</color>
 
+    <!-- M3 Primary Emerald & Accents (Vibrant on Dark) -->
+    <color name="primary_emerald">#10B981</color>
+    <color name="primary_emerald_dark">#34D399</color>
+    <color name="primary_emerald_light">#064E3B</color>
+    <color name="primary_emerald_subtle">#062E22</color>
+
+    <!-- M3 Status & Emergency (Crisp & High-Contrast) -->
+    <color name="emergency_crimson">#EF4444</color>
+    <color name="emergency_crimson_light">#450A0A</color>
+    <color name="emergency_crimson_subtle">#2A0A0A</color>
+
+    <color name="warning_amber">#F59E0B</color>
+    <color name="warning_amber_light">#451A03</color>
+
+    <color name="info_blue">#3B82F6</color>
+    <color name="info_blue_light">#1E3A8A</color>
+
+    <!-- Action Buttons -->
     <color name="recording_active">#EF4444</color>
-    <color name="recording_idle">#334155</color>
+    <color name="recording_idle">#475569</color>
 
-    <color name="btn_start">#22C55E</color>
+    <color name="btn_start">#10B981</color>
     <color name="btn_stop">#EF4444</color>
     <color name="btn_export">#3B82F6</color>
 
-    <color name="card_bg">#1E293B</color>
-    <color name="card_border">#334155</color>
-    <color name="edittext_bg">#1E293B</color>
-
-    <!-- ── Per-activity label colours ──────────────────────────────────── -->
+    <!-- Activity Labels -->
     <color name="label_falling">#EF4444</color>
-    <color name="label_running">#FB923C</color>
-    <color name="label_walking">#60A5FA</color>
-    <color name="label_standing">#4ADE80</color>
-    <color name="label_sitting">#A78BFA</color>
+    <color name="label_running">#F97316</color>
+    <color name="label_walking">#3B82F6</color>
+    <color name="label_standing">#10B981</color>
+    <color name="label_sitting">#8B5CF6</color>
     <color name="label_lying">#94A3B8</color>
 
-    <!-- ── Fall detector phase colours ─────────────────────────────────── -->
-    <color name="phase_yellow">#FACC15</color>
-    <color name="phase_orange">#FB923C</color>
+    <!-- Phase indicators -->
+    <color name="phase_yellow">#F59E0B</color>
+    <color name="phase_orange">#F97316</color>
     <color name="phase_red">#EF4444</color>
 
-    <!-- ── Fall alert ────────────────────────────────────────────────────── -->
     <color name="fall_alert_bg">#DC2626</color>
 
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+    <color name="purple_200">#A78BFA</color>
+    <color name="purple_500">#10B981</color>
+    <color name="purple_700">#34D399</color>
+    <color name="teal_200">#34D399</color>
+    <color name="teal_700">#059669</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Theme Specific Tokens -->
+    <color name="hero_paused_bg">#151C2C</color>
+    <color name="hero_paused_circle">#1E293B</color>
+    <color name="input_bg">#1E293B</color>
 </resources>

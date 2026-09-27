@@ -75,6 +75,7 @@ class FallMonitoringService : Service(), SensorEventListener {
         fun onSosDispatched(summary: String)
         fun onBatteryModeChanged(isLowBattery: Boolean)
         fun onSampleCountChanged(count: Int, durationSeconds: Long)
+        fun onSensorMagnitudeUpdate(currentAcc: Float) {}
     }
 
     private val binder = LocalBinder()
@@ -121,6 +122,7 @@ class FallMonitoringService : Service(), SensorEventListener {
     private var currentLabel = "—"
     private var currentConfidence = 0f
     private var lastNotificationUpdateMs = 0L
+    private var lastAccMagnitudePost = 0L
 
     var alertSecondsRemaining = 30
         private set
@@ -193,6 +195,7 @@ class FallMonitoringService : Service(), SensorEventListener {
                 }
             }
         )
+        applySensitivityPreferences()
 
         inferenceEngine = InferenceEngine(
             context = this,
@@ -385,7 +388,17 @@ class FallMonitoringService : Service(), SensorEventListener {
                 sensorBuffer.latestGz = event.values[2]
             }
             Sensor.TYPE_ACCELEROMETER -> {
-                sensorBuffer.push(event.values[0], event.values[1], event.values[2])
+                val ax = event.values[0]
+                val ay = event.values[1]
+                val az = event.values[2]
+                sensorBuffer.push(ax, ay, az)
+
+                val now = System.currentTimeMillis()
+                if (now - lastAccMagnitudePost >= 100L) {
+                    lastAccMagnitudePost = now
+                    val accMag = Math.sqrt((ax * ax + ay * ay + az * az).toDouble()).toFloat()
+                    uiHandler.post { listener?.onSensorMagnitudeUpdate(accMag) }
+                }
 
                 if (isRecording.get()) {
                     val rec = SensorDataRecord(
@@ -690,6 +703,17 @@ class FallMonitoringService : Service(), SensorEventListener {
 
     fun unregisterListener() {
         this.listener = null
+    }
+
+    fun applySensitivityPreferences() {
+        if (::fallDetector.isInitialized) {
+            fallDetector.applySensitivity(
+                preset = appPreferences.sensitivityPreset,
+                customSpike = appPreferences.customImpactThreshold,
+                customFreefall = appPreferences.customRequireFreefall,
+                customStillSec = appPreferences.customStillnessSeconds
+            )
+        }
     }
 
     override fun onDestroy() {

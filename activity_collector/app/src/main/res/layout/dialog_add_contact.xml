@@ -5,6 +5,46 @@
     android:orientation="vertical"
     android:padding="20dp">
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnPickFromContacts"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="📇  Choose from Saved Contacts"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/primary_emerald"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:backgroundTint="@color/primary_emerald_light"
+        android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1"
+            android:background="@color/divider" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="  OR ENTER MANUALLY  "
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_tertiary" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1"
+            android:background="@color/divider" />
+
+    </LinearLayout>
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -24,6 +64,7 @@
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
         android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_tertiary"
         android:background="@drawable/edittext_background"
         android:layout_marginBottom="16dp" />
 
@@ -46,6 +87,7 @@
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
         android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_tertiary"
         android:background="@drawable/edittext_background"
         android:layout_marginBottom="8dp" />
 

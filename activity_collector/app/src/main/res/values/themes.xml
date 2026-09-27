@@ -4,7 +4,9 @@
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorSecondary">@color/primary_emerald_light</item>
         <item name="android:statusBarColor">@color/background</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">@color/surface</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
         <item name="android:windowBackground">@color/background</item>
     </style>
 </resources>

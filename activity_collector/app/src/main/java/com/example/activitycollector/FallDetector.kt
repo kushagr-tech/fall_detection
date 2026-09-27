@@ -31,9 +31,9 @@ class FallDetector(
     companion object {
         private const val TAG = "FallDetector"
 
-        // Physical thresholds
-        const val SVM_SPIKE_THRESHOLD     = 22.0f   // m/s² (impact peak acceleration)
-        const val SVM_FREEFALL_THRESHOLD  = 7.0f    // m/s² (free-fall weightlessness dip)
+        // Physical thresholds (defaults)
+        const val SVM_SPIKE_THRESHOLD     = 24.0f   // m/s² (impact peak acceleration)
+        const val SVM_FREEFALL_THRESHOLD  = 6.5f    // m/s² (free-fall weightlessness dip)
         const val GYR_SPIKE_THRESHOLD     = 1.8f    // rad/s (rotation during body topple)
         const val STILLNESS_STD_THRESHOLD = 1.2f    // m/s² (max std-dev of SVM during post-fall rest)
         const val MIN_TILT_CHANGE_DEG     = 28.0f   // degrees (posture change between pre-fall & rest)
@@ -55,17 +55,68 @@ class FallDetector(
     @Volatile var currentPhase: Phase = Phase.IDLE
         private set
 
+    // Configurable thresholds for sensitivity tuning & desk placement defense
+    var svmSpikeThreshold: Float = 26.0f
+    var svmFreefallThreshold: Float = 5.5f
+    var requireFreefallDip: Boolean = true // When true, filters out placing phone on desk
+    var gyrSpikeThreshold: Float = GYR_SPIKE_THRESHOLD
+    var stillnessStdThreshold: Float = STILLNESS_STD_THRESHOLD
+    var minTiltChangeDeg: Float = MIN_TILT_CHANGE_DEG
+    var fallModelConfThresh: Float = FALL_MODEL_CONF_THRESH
+    var requiredStillWindows: Int = 3
+
     private var phaseEnteredAt = 0L
     private var confirmedWindows = 0
     private var preImpactGravity = floatArrayOf(0f, 9.8f, 0f)  // rolling baseline
     private var lastAccSvmPeak = 0f
 
+    fun applySensitivity(
+        preset: String,
+        customSpike: Float = 24.0f,
+        customFreefall: Boolean = true,
+        customStillSec: Float = 1.5f
+    ) {
+        when (preset) {
+            "desk_safe" -> {
+                // Calibrated to IGNORE desk placement / bed toss
+                // Placing phone down on desk produces ~12-18 m/s² spike with ZERO freefall dip
+                svmSpikeThreshold = 26.0f
+                svmFreefallThreshold = 5.5f
+                requireFreefallDip = true
+                fallModelConfThresh = 0.45f
+                minTiltChangeDeg = 32.0f
+                requiredStillWindows = 3 // 1.2s stillness
+            }
+            "high" -> {
+                // High vigilance for elderly
+                svmSpikeThreshold = 18.0f
+                svmFreefallThreshold = 7.5f
+                requireFreefallDip = false
+                fallModelConfThresh = 0.30f
+                minTiltChangeDeg = 20.0f
+                requiredStillWindows = 2 // 800ms
+            }
+            "custom" -> {
+                svmSpikeThreshold = customSpike
+                requireFreefallDip = customFreefall
+                requiredStillWindows = (customStillSec / 0.4f).toInt().coerceAtLeast(1)
+                fallModelConfThresh = 0.40f
+                minTiltChangeDeg = 28.0f
+            }
+            else -> { // "balanced"
+                svmSpikeThreshold = 22.0f
+                svmFreefallThreshold = 6.5f
+                requireFreefallDip = false
+                fallModelConfThresh = 0.35f
+                minTiltChangeDeg = 28.0f
+                requiredStillWindows = 2
+            }
+        }
+        Log.i(TAG, "Applied sensitivity '$preset': spike=$svmSpikeThreshold, reqFreefall=$requireFreefallDip, stillWindows=$requiredStillWindows")
+    }
+
     /**
      * Process one inference result and corresponding sensor window.
-     *
-     * @param label      The model's top predicted label for this window.
-     * @param probs      Softmax probability vector across [falling, lying, running, sitting, standing, walking].
-     * @param window2D   Raw sensor window: Array[windowSize][6] (ax, ay, az, gx, gy, gz).
      */
     @Synchronized
     fun onInferenceResult(
@@ -84,9 +135,12 @@ class FallDetector(
 
         // Class index 0 is 'falling', class index 1 is 'lying'
         val fallProb = if (probs.isNotEmpty()) probs[0] else 0f
-        val isFallPredicted = label.equals("falling", ignoreCase = true) || fallProb >= FALL_MODEL_CONF_THRESH
+        val isFallPredicted = label.equals("falling", ignoreCase = true) || fallProb >= fallModelConfThresh
         val isLyingPredicted = label.equals("lying", ignoreCase = true) || (probs.size > 1 && probs[1] >= 0.40f)
         val isActiveMotion = label.equals("walking", ignoreCase = true) || label.equals("running", ignoreCase = true)
+
+        val freefallDetected = accMin < svmFreefallThreshold
+        val rotationDetected = gyrPeak > gyrSpikeThreshold
 
         when (currentPhase) {
             Phase.IDLE -> {
@@ -95,12 +149,20 @@ class FallDetector(
                     preImpactGravity = currentOrientation
                 }
 
-                // Check for initial fall initiation (free-fall dip OR sudden acceleration spike)
-                if (accPeak > SVM_SPIKE_THRESHOLD || (accMin < SVM_FREEFALL_THRESHOLD && gyrPeak > 1.2f)) {
+                // Initial fall initiation check:
+                // When requireFreefallDip is enabled (Desk-Safe mode), require weightlessness dip before impact.
+                // Placing a phone on a desk produces deceleration only, NEVER free-fall dip.
+                val isInitiated = if (requireFreefallDip) {
+                    (freefallDetected && accPeak > 18.0f) || (accPeak > svmSpikeThreshold && freefallDetected)
+                } else {
+                    accPeak > svmSpikeThreshold || (freefallDetected && gyrPeak > 1.2f)
+                }
+
+                if (isInitiated) {
                     enterPhase(
                         Phase.PHASE1_SUDDEN_MOVEMENT,
                         now,
-                        "Acc spike = ${"%.1f".format(accPeak)} m/s² (dip: ${"%.1f".format(accMin)})"
+                        "Acc spike = ${"%.1f".format(accPeak)} m/s² (dip: ${"%.1f".format(accMin)}, reqDip=$requireFreefallDip)"
                     )
                 }
             }
@@ -110,13 +172,13 @@ class FallDetector(
                     reset("Phase 1 timed out (no rotation)")
                     return
                 }
-                if (gyrPeak > GYR_SPIKE_THRESHOLD) {
+                if (rotationDetected) {
                     enterPhase(
                         Phase.PHASE2_ROTATION,
                         now,
                         "Gyro rotation = ${"%.2f".format(gyrPeak)} rad/s"
                     )
-                } else if (accPeak > SVM_SPIKE_THRESHOLD) {
+                } else if (accPeak > svmSpikeThreshold) {
                     phaseEnteredAt = now
                 }
             }
@@ -128,7 +190,7 @@ class FallDetector(
                 }
 
                 // Must have ML model confirmation of 'falling' AND physical impact spike
-                if (isFallPredicted && accPeak > 18.0f) {
+                if (isFallPredicted && accPeak > (svmSpikeThreshold * 0.75f)) {
                     enterPhase(
                         Phase.PHASE3_IMPACT,
                         now,
@@ -143,7 +205,7 @@ class FallDetector(
                     return
                 }
 
-                // If user immediately gets up and continues walking/running, reject false alarm (e.g. phone drop / stumble)
+                // If user immediately gets up and continues walking/running, reject false alarm
                 if (isActiveMotion && accStd > 2.0f) {
                     reset("User active ($label) — recovered from stumble/drop")
                     return
@@ -155,18 +217,17 @@ class FallDetector(
                 // Condition for post-fall state:
                 // 1. Model predicts 'lying' OR
                 // 2. Post-fall stillness (low acc variance) with a significant orientation tilt change
-                val isPostFallRest = isLyingPredicted || (accStd < STILLNESS_STD_THRESHOLD && tiltAngle >= MIN_TILT_CHANGE_DEG)
+                val isPostFallRest = isLyingPredicted || (accStd < stillnessStdThreshold && tiltAngle >= minTiltChangeDeg)
 
                 if (isPostFallRest) {
                     confirmedWindows++
-                    Log.d(TAG, "Post-fall window $confirmedWindows / $REQUIRED_STILL_WINDOWS (tilt: ${"%.1f".format(tiltAngle)}°, std: ${"%.2f".format(accStd)}, label: $label)")
+                    Log.d(TAG, "Post-fall window $confirmedWindows / $requiredStillWindows (tilt: ${"%.1f".format(tiltAngle)}°, std: ${"%.2f".format(accStd)}, label: $label)")
 
-                    if (confirmedWindows >= REQUIRED_STILL_WINDOWS) {
+                    if (confirmedWindows >= requiredStillWindows) {
                         enterPhase(Phase.CONFIRMED, now, "Fall confirmed: model verified + sustained post-fall rest")
                         onFallConfirmed()
                     }
                 } else {
-                    // Reset consecutive count if moving vigorously
                     if (accStd > 2.0f) {
                         confirmedWindows = 0
                     }
