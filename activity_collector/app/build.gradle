@@ -37,6 +37,12 @@ android {
     buildFeatures {
         viewBinding true
     }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
 }
 
 dependencies {
@@ -48,5 +54,4 @@ dependencies {
     // ── PyTorch Mobile (CPU-only, ~3 MB AAR) ──────────────────────────────
     // pytorch_android_lite loads TorchScript .ptl files with no Python runtime.
     implementation 'org.pytorch:pytorch_android_lite:1.13.1'
-    implementation 'org.pytorch:pytorch_android_torchvision_lite:1.13.1'
 }
