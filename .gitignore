@@ -7,7 +7,6 @@ build/
 local.properties
 */local.properties
 .cxx/
-*.apk
 *.ap_
 *.aab
 *.dex
