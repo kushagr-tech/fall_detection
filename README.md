@@ -6,11 +6,11 @@
 
 ---
 
-## Screenshots
+## Demo
 
-| Dashboard (Guard Active) | Alert History | Sensitivity Calibrator | Settings & Contacts |
-|:---:|:---:|:---:|:---:|
-| ![Dashboard](screenshots/01_dashboard_guard.png) | ![History](screenshots/02_alert_history.png) | ![Sensitivity](screenshots/03_sensitivity_presets_calibrator.png) | ![Settings](screenshots/05_settings_and_emergency_contacts.png) |
+![FallGuard AI demo: add a contact, pick a sensitivity, turn on Guard, and respond to a fall alert](screenshots/fallguard-demo.gif)
+
+Recorded in the Android Studio emulator, with the fall simulated using emulator sensor data. [Watch the full-quality MP4 with sound](screenshots/fallguard-demo.mp4).
 
 ---
 
@@ -217,7 +217,7 @@ bob_hackathon/
 │       └── plots/                     # Confusion matrices, feature importance
 │
 ├── ic_launcher/                       # App icon source assets
-└── screenshots/                       # App screenshots
+└── screenshots/                       # App demo GIF and video
 ```
 
 ---
